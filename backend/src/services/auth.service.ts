@@ -2,6 +2,7 @@ import prisma from '../lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Role } from '@prisma/client';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../lib/resend';
 
 export class AuthService {
   /**
@@ -57,10 +58,13 @@ export class AuthService {
       },
     });
 
+    // Send OTP via email using Resend
+    await sendVerificationEmail(email, otp, name);
+
     return {
       userId: user.id,
       email: user.email,
-      otp, // In production, this would be emailed instead of returned
+      message: 'Verification code sent to your email.',
     };
   }
 
@@ -94,6 +98,40 @@ export class AuthService {
     await prisma.verificationToken.delete({ where: { id: tokenRecord.id } });
 
     return { success: true, message: 'Email successfully verified.' };
+  }
+
+  /**
+   * Resends a new verification OTP to the user's email.
+   * Deletes any existing tokens for that email before generating a fresh one.
+   */
+  public async resendVerificationOTP(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new Error('User not found.');
+
+    if (user.emailVerified) {
+      throw new Error('Email is already verified.');
+    }
+
+    // Clean up any existing verification tokens
+    await prisma.verificationToken.deleteMany({
+      where: { identifier: email },
+    });
+
+    const otp = this.generateOTP();
+    const hashedOTP = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token: hashedOTP,
+        expires: expiresAt,
+      },
+    });
+
+    await sendVerificationEmail(email, otp, user.name || undefined);
+
+    return { success: true, message: 'A new verification code has been sent to your email.' };
   }
 
   /**
@@ -152,9 +190,11 @@ export class AuthService {
       },
     });
 
+    // Send reset OTP via email
+    await sendPasswordResetEmail(email, otp);
+
     return {
-      otp, // In production, this would be emailed
-      message: 'Password reset OTP generated successfully.',
+      message: 'Password reset code sent to your email.',
     };
   }
 

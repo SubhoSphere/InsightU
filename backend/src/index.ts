@@ -32,7 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use(errorHandler);
 
 // Database connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/insightu';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://localhost:27017/insightu';
 
 mongoose
   .connect(MONGODB_URI)

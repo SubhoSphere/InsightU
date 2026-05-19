@@ -23,7 +23,7 @@ const getInitialState = (): AuthState => {
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: true, // Start in loading state during SSR
+      isLoading: false, // Start false during SSR to match initial client state and prevent hydration errors
     };
   }
 

@@ -13,6 +13,8 @@ import {
 function VerifyEmailContent() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -53,7 +55,7 @@ function VerifyEmailContent() {
       setSuccess(true);
       
       setTimeout(() => {
-        router.push('/login');
+        router.push('/');
       }, 1500);
       
     } catch (err: any) {
@@ -81,7 +83,7 @@ function VerifyEmailContent() {
       {success && (
         <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-500 text-sm font-medium flex flex-col items-center">
           <CheckCircle2 className="h-6 w-6 mb-2" />
-          Email verified successfully! Redirecting to login...
+          Email verified successfully! Redirecting to home...
         </div>
       )}
 
@@ -125,11 +127,34 @@ function VerifyEmailContent() {
         Didn't receive the email?{' '}
         <button 
           type="button"
-          disabled={isLoading || success}
+          disabled={isLoading || success || resendLoading}
           className="text-foreground hover:underline font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => setError('Resend functionality requires backend implementation.')}
+          onClick={async () => {
+            if (!email) {
+              setError('Email address is missing.');
+              return;
+            }
+            setResendLoading(true);
+            setResendSuccess(false);
+            setError(null);
+            try {
+              const res = await fetch('http://localhost:5000/api/auth/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.message || data.error || 'Failed to resend code.');
+              setResendSuccess(true);
+              setTimeout(() => setResendSuccess(false), 5000);
+            } catch (err: any) {
+              setError(err.message || 'Failed to resend verification code.');
+            } finally {
+              setResendLoading(false);
+            }
+          }}
         >
-          Click to resend
+          {resendLoading ? 'Sending...' : resendSuccess ? 'Code sent!' : 'Click to resend'}
         </button>
       </div>
     </div>

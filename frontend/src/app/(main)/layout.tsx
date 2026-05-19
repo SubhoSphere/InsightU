@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from './_components/Navbar';
+import Footer from './_components/Footer';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,6 +9,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <main className="flex-1">
         {children}
       </main>
+      <Footer />
     </div>
   );
 }

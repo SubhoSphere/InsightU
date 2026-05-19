@@ -145,7 +145,7 @@ export default function AccountPage() {
                                 {avatarPreview ? (
                                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-3xl font-bold text-primary">{initials}</span>
+                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.name || 'User')}`} alt="Avatar" className="w-full h-full object-cover" />
                                 )}
                             </div>
                             <button

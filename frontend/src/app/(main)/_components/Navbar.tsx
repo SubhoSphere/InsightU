@@ -4,103 +4,105 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronRight, LogOut, Menu, User } from 'lucide-react';
+import { ChevronRight, LogOut, Menu, User, LayoutDashboard, Settings } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { logout } from '@/store/slices/authSlice';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 // 1. Explicit TypeScript Interfaces
 interface NavItem {
-  label: string;
-  path: string;
-  id?: string;
+    label: string;
+    path: string;
+    id?: string;
 }
 
 // 2. Public Navigation Array (Unauthorized Guests)
 const publicNavItems: NavItem[] = [
-  { label: 'Features', path: '/#features', id: '01' },
-  { label: 'About', path: '/#about', id: '02' },
-  { label: 'Contact', path: '/contact', id: '03' },
+    { label: 'Features', path: '/#features', id: '01' },
+    { label: 'About', path: '/about', id: '02' },
+    { label: 'Contact', path: '/contact', id: '03' },
 ];
 
 const TechLink = ({ item, isActive }: { item: NavItem; isActive: boolean }) => (
-  <Link
-    href={item.path}
-    className={cn(
-      "group relative flex items-center gap-2 px-4 py-2 text-sm font-mono tracking-widest transition-colors hover:text-primary",
-      isActive ? "text-primary" : "text-muted-foreground"
-    )}
-  >
-    <span className={cn("transition-opacity duration-200 text-primary", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>[</span>
-    <span className="relative">
-      {item.id && (
-        <span className="absolute -left-4 -top-2 text-[0.6rem] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-all">
-          {item.id}
+    <Link
+        href={item.path}
+        className={cn(
+            "group relative flex items-center gap-2 px-4 py-2 text-sm font-mono tracking-widest transition-colors hover:text-primary",
+            isActive ? "text-primary" : "text-muted-foreground"
+        )}
+    >
+        <span className={cn("transition-opacity duration-200 text-primary", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>[</span>
+        <span className="relative">
+            {item.id && (
+                <span className="absolute -left-4 -top-2 text-[0.6rem] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-all">
+                    {item.id}
+                </span>
+            )}
+            {item.label}
         </span>
-      )}
-      {item.label}
-    </span>
-    <span className={cn("transition-opacity duration-200 text-primary", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>]</span>
-  </Link>
+        <span className={cn("transition-opacity duration-200 text-primary", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>]</span>
+    </Link>
 );
 
 const Navbar = () => {
-  // --- Redux State Selectors ---
-  const { isAuthenticated, token, user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const pathname = usePathname();
+    // --- Redux State Selectors ---
+    const { isAuthenticated, token, user } = useAppSelector((state) => state.auth);
+    const dispatch = useAppDispatch();
+    const router = useRouter();
+    const pathname = usePathname();
 
-  // --- Dynamic Protected Routes Computation ---
-  const protectedNavItems = useMemo<NavItem[]>(() => {
-    const baseItems: NavItem[] = [
-      { label: 'Dashboard', path: '/dashboard', id: '01' },
-      { label: 'Explore Feed', path: '/feed', id: '02' },
-    ];
+    const [mounted, setMounted] = useState(false);
 
-    // Conditionally inject contribution route for Verified Seniors
-    if (user?.role === 'VERIFIED_SENIOR') {
-      baseItems.push({ label: 'Contribute Intel', path: '/contribute', id: '03' });
-    }
+    // --- Dynamic Protected Routes Computation ---
+    const activeNavItems = useMemo<NavItem[]>(() => {
+        const items = [...publicNavItems];
+        if (mounted && isAuthenticated) {
+            items.push({ label: 'Dashboard', path: '/dashboard', id: '04' });
+        }
+        return items;
+    }, [isAuthenticated, mounted]);
 
-    return baseItems;
-  }, [user?.role]);
+    // --- Responsive Component State Hooks ---
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [isAtTop, setIsAtTop] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+    const [pending, setPending] = useState(false);
 
-  // Determine active display items based on session
-  const activeNavItems = isAuthenticated ? protectedNavItems : publicNavItems;
+    useEffect(() => {
+        setMounted(true);
+        const controlNavbar = () => {
+            const currentScrollY = window.scrollY;
+            setIsAtTop(currentScrollY < 10);
+            setIsVisible(!(currentScrollY > lastScrollY && currentScrollY > 100));
+            setLastScrollY(currentScrollY);
+        };
 
-  // --- Responsive Component State Hooks ---
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [isAtTop, setIsAtTop] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [mounted, setMounted] = useState(false);
-  const [pending, setPending] = useState(false);
+        window.addEventListener('scroll', controlNavbar);
+        return () => window.removeEventListener('scroll', controlNavbar);
+    }, [lastScrollY]);
 
-  useEffect(() => {
-    setMounted(true);
-    const controlNavbar = () => {
-      const currentScrollY = window.scrollY;
-      setIsAtTop(currentScrollY < 10);
-      setIsVisible(!(currentScrollY > lastScrollY && currentScrollY > 100));
-      setLastScrollY(currentScrollY);
+    // --- Action Handlers ---
+    const handleLogout = async () => {
+        setPending(true);
+        setIsMobileMenuOpen(false); // Close drawer if open
+        dispatch(logout());
+        router.push("/login");
+        router.refresh();
+        setPending(false);
     };
-
-    window.addEventListener('scroll', controlNavbar);
-    return () => window.removeEventListener('scroll', controlNavbar);
-  }, [lastScrollY]);
-
-  // --- Action Handlers ---
-  const handleLogout = async () => {
-    setPending(true);
-    setIsMobileMenuOpen(false); // Close drawer if open
-    dispatch(logout());
-    router.push("/login");
-    router.refresh();
-    setPending(false);
-  };
 
     return (
         <header
@@ -133,21 +135,53 @@ const Navbar = () => {
                             <TechLink key={item.path} item={item} isActive={pathname === item.path} />
                         ))}
                     </nav>
+                    <ThemeToggle />
 
                     {/* --- RIGHT SIDE --- */}
                     <div className='flex items-center gap-4'>
 
                         {
                             !mounted ? null : isAuthenticated && user ? (
-                                <div className='hidden md:flex gap-4 items-center'>
-                                    <div className="flex flex-col items-end mr-2">
-                                        <span className="text-sm font-semibold">{user.name}</span>
-                                        <span className="text-xs text-muted-foreground">{user.role.replace('_', ' ')}</span>
-                                    </div>
-                                    <Button disabled={pending} onClick={handleLogout} variant="outline" size="sm" className="hidden md:flex gap-2">
-                                        <LogOut size={16} />
-                                        Logout
-                                    </Button>
+                                <div className="hidden md:block">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger className="relative h-9 w-9 rounded-full border border-border p-0 hover:bg-muted/50 focus-visible:ring-1 outline-none flex items-center justify-center cursor-pointer">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`} alt={user.name || 'User'} />
+                                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                    {user.name?.[0]?.toUpperCase() || 'U'}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border">
+                                            <DropdownMenuLabel className="font-normal px-2 py-1.5 flex flex-col gap-1">
+                                                <div className="flex flex-col space-y-1">
+                                                    <p className="text-sm font-semibold leading-none text-foreground">{user.name}</p>
+                                                    <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>
+                                                </div>
+                                                <div className="mt-1.5 px-2 py-0.5 text-[9px] font-mono font-semibold tracking-wider bg-primary/15 text-primary rounded-md uppercase self-start">
+                                                    {user.role.replace('_', ' ')}
+                                                </div>
+                                            </DropdownMenuLabel>
+                                            <DropdownMenuSeparator className="my-1.5 bg-border" />
+                                            <DropdownMenuItem className="p-0">
+                                                <Link href="/dashboard" className="flex items-center w-full gap-2 px-3 py-2 text-sm cursor-pointer">
+                                                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                                                    <span>Dashboard</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="p-0">
+                                                <Link href="/dashboard/account" className="flex items-center w-full gap-2 px-3 py-2 text-sm cursor-pointer">
+                                                    <Settings className="h-4 w-4 text-muted-foreground" />
+                                                    <span>Account Settings</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator className="my-1.5 bg-border" />
+                                            <DropdownMenuItem disabled={pending} onClick={handleLogout} variant="destructive" className="cursor-pointer flex items-center w-full gap-2 px-2 py-1.5 text-sm text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                                <LogOut className="h-4 w-4" />
+                                                <span>Logout</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                             ) : (
                                 <Link href='/login' className="hidden md:flex p-2 px-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full tracking-widest text-xs transition-all font-semibold uppercase">Sign In</Link>
@@ -165,9 +199,12 @@ const Navbar = () => {
                                         {
                                             !mounted ? null : isAuthenticated && user && (
                                                 <div className='mb-4 p-2 flex gap-4 items-center border-b border-border pb-4'>
-                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                        {user.name?.[0]?.toUpperCase() || 'U'}
-                                                    </div>
+                                                    <Avatar className="h-10 w-10">
+                                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`} alt={user.name || 'User'} />
+                                                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                                                            {user.name?.[0]?.toUpperCase() || 'U'}
+                                                        </AvatarFallback>
+                                                    </Avatar>
                                                     <div className='flex flex-col gap-0.5'>
                                                         <span className="text-foreground truncate text-sm font-medium">
                                                             {user.name}
