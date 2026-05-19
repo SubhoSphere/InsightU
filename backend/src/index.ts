@@ -18,6 +18,7 @@ app.use(express.json());
 
 // Routes
 import apiRoutes from './routes/api.routes';
+import authRoutes from './routes/auth.routes';
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'InsightU API is running' });
@@ -25,6 +26,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // Bind unified router cleanly under the global path mount /api
 app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
