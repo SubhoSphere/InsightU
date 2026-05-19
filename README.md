@@ -1,3 +1,5 @@
+![InsightU Logo](https://res.cloudinary.com/drfodwc7q/image/upload/v1779172990/l_logo_dwvinp.png)
+
 # Product Name: InsightU
 ### Developed by Team CodeSpark (Subhajit Mandal)
 
@@ -10,6 +12,7 @@ An intelligence-sharing platform designed to democratize institutional knowledge
 - **Proactive Nudge Engine:** Smart notifications alerting students before critical windows close.
 
 ## Tech Stack
-- Frontend: [Your Frontend Choice, e.g., Next.js]
-- Backend & Database: [Your Backend Choice, e.g., Node.js]
-- Hosting: [Your Deployment Choice, e.g., Vercel]
+- Frontend: Next.js
+- Backend: Node.js
+- Database: MongoDB
+- Hosting: Vercel

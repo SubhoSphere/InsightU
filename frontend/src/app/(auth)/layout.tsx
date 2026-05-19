@@ -21,10 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Top Header */}
         <div className="relative z-10 flex items-center justify-between w-full">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">IU</span>
-            </div>
-            <span className="text-white font-semibold text-xl tracking-tight">InsightU</span>
+            <Image src="/l_logo.png" alt="InsightU Logo" width={160} height={45} className="h-10 w-auto object-contain" priority />
           </Link>
           <Link href="/" className="flex items-center text-sm font-medium text-slate-300 hover:text-white transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />

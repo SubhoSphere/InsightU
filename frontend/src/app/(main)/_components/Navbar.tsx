@@ -1,0 +1,217 @@
+"use client";
+
+import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronRight, LogOut, Menu, User } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useAppSelector, useAppDispatch } from '@/store/store';
+import { logout } from '@/store/slices/authSlice';
+
+// 1. Explicit TypeScript Interfaces
+interface NavItem {
+  label: string;
+  path: string;
+  id?: string;
+}
+
+// 2. Public Navigation Array (Unauthorized Guests)
+const publicNavItems: NavItem[] = [
+  { label: 'Features', path: '/#features', id: '01' },
+  { label: 'About', path: '/#about', id: '02' },
+  { label: 'Contact', path: '/contact', id: '03' },
+];
+
+const TechLink = ({ item, isActive }: { item: NavItem; isActive: boolean }) => (
+  <Link
+    href={item.path}
+    className={cn(
+      "group relative flex items-center gap-2 px-4 py-2 text-sm font-mono tracking-widest transition-colors hover:text-primary",
+      isActive ? "text-primary" : "text-muted-foreground"
+    )}
+  >
+    <span className={cn("transition-opacity duration-200 text-primary", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>[</span>
+    <span className="relative">
+      {item.id && (
+        <span className="absolute -left-4 -top-2 text-[0.6rem] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-all">
+          {item.id}
+        </span>
+      )}
+      {item.label}
+    </span>
+    <span className={cn("transition-opacity duration-200 text-primary", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>]</span>
+  </Link>
+);
+
+const Navbar = () => {
+  // --- Redux State Selectors ---
+  const { isAuthenticated, token, user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // --- Dynamic Protected Routes Computation ---
+  const protectedNavItems = useMemo<NavItem[]>(() => {
+    const baseItems: NavItem[] = [
+      { label: 'Dashboard', path: '/dashboard', id: '01' },
+      { label: 'Explore Feed', path: '/feed', id: '02' },
+    ];
+
+    // Conditionally inject contribution route for Verified Seniors
+    if (user?.role === 'VERIFIED_SENIOR') {
+      baseItems.push({ label: 'Contribute Intel', path: '/contribute', id: '03' });
+    }
+
+    return baseItems;
+  }, [user?.role]);
+
+  // Determine active display items based on session
+  const activeNavItems = isAuthenticated ? protectedNavItems : publicNavItems;
+
+  // --- Responsive Component State Hooks ---
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const controlNavbar = () => {
+      const currentScrollY = window.scrollY;
+      setIsAtTop(currentScrollY < 10);
+      setIsVisible(!(currentScrollY > lastScrollY && currentScrollY > 100));
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', controlNavbar);
+    return () => window.removeEventListener('scroll', controlNavbar);
+  }, [lastScrollY]);
+
+  // --- Action Handlers ---
+  const handleLogout = async () => {
+    setPending(true);
+    setIsMobileMenuOpen(false); // Close drawer if open
+    dispatch(logout());
+    router.push("/login");
+    router.refresh();
+    setPending(false);
+  };
+
+    return (
+        <header
+            className={cn(
+                "fixed top-0 z-50 w-full transition-all duration-500 border-b",
+                // Visibility Logic (Translate Y)
+                isVisible ? "translate-y-0" : "-translate-y-full",
+                // Transparency Logic based on top position
+                isAtTop
+                    ? "bg-transparent border-transparent py-4"
+                    : "bg-background/80 backdrop-blur-md border-border py-2 shadow-sm"
+            )}
+        >
+            {/* DECORATIVE: Top Left Corner Marker */}
+            <div className={cn(
+                "absolute top-0 left-0 w-4 h-4 border-t border-l border-primary/50 transition-opacity",
+                isAtTop ? "opacity-100" : "opacity-0"
+            )} />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className='flex md:h-14 h-8 items-center justify-between'>
+                    {/* --- LOGO --- */}
+                    <Link href="/" className="flex items-center md:gap-3 gap-2 group relative z-50">
+                        <Image src="/l_logo.png" alt="InsightU Logo" width={160} height={45} className="h-8 md:h-10 w-auto object-contain" priority />
+                    </Link>
+
+                    {/* --- DESKTOP NAVIGATION --- */}
+                    <nav className='hidden md:flex items-center gap-1'>
+                        {activeNavItems.map((item) => (
+                            <TechLink key={item.path} item={item} isActive={pathname === item.path} />
+                        ))}
+                    </nav>
+
+                    {/* --- RIGHT SIDE --- */}
+                    <div className='flex items-center gap-4'>
+
+                        {
+                            !mounted ? null : isAuthenticated && user ? (
+                                <div className='hidden md:flex gap-4 items-center'>
+                                    <div className="flex flex-col items-end mr-2">
+                                        <span className="text-sm font-semibold">{user.name}</span>
+                                        <span className="text-xs text-muted-foreground">{user.role.replace('_', ' ')}</span>
+                                    </div>
+                                    <Button disabled={pending} onClick={handleLogout} variant="outline" size="sm" className="hidden md:flex gap-2">
+                                        <LogOut size={16} />
+                                        Logout
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Link href='/login' className="hidden md:flex p-2 px-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full tracking-widest text-xs transition-all font-semibold uppercase">Sign In</Link>
+                            )
+                        }
+
+                        {/* --- MOBILE BURGER --- */}
+                        <div className='flex md:hidden'>
+                            <Popover open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                                <PopoverTrigger className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), "border border-border rounded-md hover:bg-accent")}>
+                                    <Menu className="h-5 w-5" />
+                                </PopoverTrigger>
+                                <PopoverContent align='end' className="w-[300px] p-0 border-border bg-card/95 backdrop-blur-xl">
+                                    <div className="flex flex-col p-2">
+                                        {
+                                            !mounted ? null : isAuthenticated && user && (
+                                                <div className='mb-4 p-2 flex gap-4 items-center border-b border-border pb-4'>
+                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        {user.name?.[0]?.toUpperCase() || 'U'}
+                                                    </div>
+                                                    <div className='flex flex-col gap-0.5'>
+                                                        <span className="text-foreground truncate text-sm font-medium">
+                                                            {user.name}
+                                                        </span>
+                                                        <span className="text-muted-foreground truncate text-xs font-normal">
+                                                            {user.email}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        }
+
+                                        <Link href={"/"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-3 hover:bg-accent border-b border-border last:border-0">
+                                            <span className={cn("font-mono text-sm tracking-widest", pathname === "/" && "text-primary")}>HOME</span>
+                                            <ChevronRight className="w-4 h-4 text-primary" />
+                                        </Link>
+                                        {activeNavItems.map((item) => (
+                                            <Link key={item.path} href={item.path} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-3 hover:bg-accent border-b border-border last:border-0">
+                                                <span className={cn("font-mono text-sm tracking-widest", pathname === item.path && "text-primary")}>{item.label.toUpperCase()}</span>
+                                                <ChevronRight className="w-4 h-4 text-primary" />
+                                            </Link>
+                                        ))}
+
+                                        {
+                                            !mounted ? null : isAuthenticated ? (
+                                                <Button disabled={pending} onClick={handleLogout} variant={"destructive"} className='flex gap-2 mt-4 items-center justify-center w-full'>
+                                                    <LogOut size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>Logout</span>
+                                                </Button>
+                                            ) : (
+                                                <Link href={"/login"} className={cn(buttonVariants({ variant: "default" }), "mt-4 w-full")}>
+                                                    Sign In
+                                                </Link>
+                                            )
+                                        }
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    )
+}
+
+export default Navbar
