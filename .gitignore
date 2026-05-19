@@ -1,2 +1,12 @@
 AGENTS.md
 CLAUDE.md
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Build output
+dist/
