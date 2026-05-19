@@ -13,8 +13,19 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+import apiRoutes from './routes/api.routes';
+
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'InsightU API is running' });
+});
+
+// Bind unified router cleanly under the global path mount /api
+app.use('/api', apiRoutes);
+
+// Global Error Handler
+app.use((err: any, req: Request, res: Response, next: import('express').NextFunction) => {
+  console.error('[Error Handler]:', err.message || err);
+  res.status(500).json({ success: false, error: err.message || 'Internal Server Error' });
 });
 
 // Database connection
