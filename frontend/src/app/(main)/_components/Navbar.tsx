@@ -32,7 +32,7 @@ interface NavItem {
 const publicNavItems: NavItem[] = [
     { label: 'Features', path: '/#features', id: '01' },
     { label: 'About', path: '/about', id: '02' },
-    { label: 'Contact', path: '/contact', id: '03' },
+    { label: 'Support', path: '/support', id: '03' },
 ];
 
 const TechLink = ({ item, isActive }: { item: NavItem; isActive: boolean }) => (

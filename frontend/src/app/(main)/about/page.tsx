@@ -2,206 +2,434 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  ShieldCheck, 
-  Users, 
-  Sparkles, 
-  ArrowRight, 
-  GraduationCap, 
-  BookOpen, 
-  Heart,
+import {
+  Clock,
+  BookOpen,
+  AlertTriangle,
+  CheckCircle2,
+  Activity,
   Globe,
-  Award
+  Users,
+  Award,
+  Sparkles,
+  BookMarked,
+  Mail,
+  ShieldCheck,
+  ArrowRight,
+  GitBranch,
+  Link2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
-
-const TEAM_MEMBERS = [
-  {
-    name: 'Marvin McKinney',
-    role: 'Founder & Lead Architect',
-    bio: 'Senior advisor focused on building systems that bridge the institutional knowledge gap.',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marvin'
-  },
-  {
-    name: 'Esther Howard',
-    role: 'Community Lead',
-    bio: 'Consensus coordinator, ensuring student voice and verification protocols remain bulletproof.',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Esther'
-  },
-  {
-    name: 'Albert Flores',
-    role: 'Platform Engineering',
-    bio: 'Specialist in dynamic frontend interfaces and premium, high-speed user experiences.',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Albert'
-  }
-];
-
-const VALUES = [
-  {
-    icon: ShieldCheck,
-    title: 'Sovereign Verification',
-    desc: 'We enforce advanced peer consensus. Rumors are filtered out; only verified facts from accredited seniors guide our community.'
-  },
-  {
-    icon: Users,
-    title: 'Inclusivity First',
-    desc: 'Empowering first-generation and underrepresented students by making the "hidden curriculum" of campus life open to all.'
-  },
-  {
-    icon: Sparkles,
-    title: 'Actionable Clarity',
-    desc: 'No clutter. Only highly indexed, reliable details on classes, career opportunities, and campus navigation.'
-  }
-];
+import { Button } from '@/components/ui/button';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground pt-24 pb-20 selection:bg-primary/20 selection:text-primary">
-      {/* Background Decorator Grids */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_0.5px,transparent_0.5px),linear-gradient(to_bottom,var(--border)_0.5px,transparent_0.5px)] opacity-[0.05] pointer-events-none" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary relative overflow-hidden pb-16">
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-24">
-        
-        {/* ===== HEADER SEGMENT ===== */}
-        <section className="text-center space-y-6 pt-12">
+      {/* Dynamic Grid Coordinates Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_0.5px,transparent_0.5px),linear-gradient(to_bottom,var(--border)_0.5px,transparent_0.5px)] opacity-[0.08] pointer-events-none" />
+
+      {/* Ambient Gradient Glows */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[350px] h-[350px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+      {/* Main Container */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 space-y-28">
+
+        {/* Section 1: Vision Hero */}
+        <section className="text-center flex flex-col justify-center items-center h-screen space-y-6 max-w-4xl mx-auto">
+          {/* Monospace Pill */}
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 backdrop-blur-md px-4 py-1.5 text-xs font-mono tracking-widest text-primary uppercase">
-            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-            Our Mission
+            <Sparkles size={12} className="text-primary animate-pulse" />
+            Our Mission & Directive
           </div>
-          
-          <h1 className="text-4xl sm:text-6xl font-extrabold uppercase tracking-tight text-foreground max-w-4xl mx-auto leading-[1.1]">
-            Bridging the <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Campus Intelligence Gap</span>
+
+          {/* Massive Storytelling Title */}
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.1] uppercase text-foreground">
+            Democratizing institutional knowledge for <span className="text-primary">first-generation</span> students.
           </h1>
-          
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            InsightU is a sovereign, crowd-sourced intelligence network built to arm every student with verified, peer-validated knowledge of college life.
+
+          {/* Vision Paragraph */}
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto font-sans font-medium">
+            InsightU is a peer-verified academic pulse designed to tear down the unwritten barriers of higher education. We build dynamic fact networks, democratize placement secrets, and verify campus details so no student is left in the dark.
           </p>
-        </section>
 
-        {/* ===== CORE VISION / STORY ===== */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <div className="flex gap-4 items-center">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <BookOpen size={24} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground uppercase">The Story Behind InsightU</h2>
+          {/* Quick Metrics Bar */}
+          <div className="pt-8 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+            <div className="p-4 bg-card/40 backdrop-blur-md border border-border rounded-2xl text-center">
+              <span className="block text-2xl font-extrabold text-foreground font-sans">100%</span>
+              <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mt-1">Open Access</span>
             </div>
-            
-            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-              Every year, thousands of students step onto campus without the legacy advantages that others enjoy. They face the "hidden curriculum"—informal rules, course strategies, and career routes that are rarely published but highly critical.
-            </p>
-            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-              InsightU was founded to level the playing field. By connecting first-generation freshers directly with accredited senior advisors and securing submissions with peer consensus verification, we turn raw campus intelligence into institutional clarity.
-            </p>
-            
-            <div className="flex flex-wrap gap-6 pt-2">
-              <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-                <Heart size={16} className="text-destructive fill-destructive/10" />
-                <span>Student Driven</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-                <Globe size={16} className="text-primary" />
-                <span>Campus Scaled</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-                <Award size={16} className="text-amber-500" />
-                <span>100% Verified</span>
-              </div>
+            <div className="p-4 bg-card/40 backdrop-blur-md border border-border rounded-2xl text-center">
+              <span className="block text-2xl font-extrabold text-primary font-sans">Peer</span>
+              <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mt-1">Verified Data</span>
             </div>
-          </div>
-
-          <div className="relative group rounded-3xl overflow-hidden border border-border bg-card/40 backdrop-blur-md p-8 shadow-sm flex flex-col justify-between aspect-video">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="text-xs font-mono text-primary uppercase tracking-widest">Core Statement</div>
-            <p className="text-lg sm:text-xl font-medium italic text-foreground leading-relaxed mt-4">
-              "We believe that a student's background should never dictate their potential on campus. True intelligence belongs to the collective student body."
-            </p>
-            <div className="mt-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                IU
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-foreground">InsightU Founders</span>
-                <span className="text-[10px] text-muted-foreground font-mono uppercase">University Coalition</span>
-              </div>
+            <div className="p-4 bg-card/40 backdrop-blur-md border border-border rounded-2xl text-center">
+              <span className="block text-2xl font-extrabold text-foreground font-sans">Real-time</span>
+              <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mt-1">Nudge engine</span>
+            </div>
+            <div className="p-4 bg-card/40 backdrop-blur-md border border-border rounded-2xl text-center">
+              <span className="block text-2xl font-extrabold text-primary font-sans">Zero</span>
+              <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mt-1">Siloed Data</span>
             </div>
           </div>
         </section>
 
-        {/* ===== VALUE PROPOSITION / PILLARS ===== */}
+        {/* Section 2: The Invisible Curriculum Grid */}
         <section className="space-y-12">
+          {/* Header */}
           <div className="text-center space-y-3">
-            <h2 className="text-3xl font-extrabold tracking-tight text-foreground uppercase">Our Operating Pillars</h2>
-            <p className="text-muted-foreground text-sm max-w-xl mx-auto">The principles that secure trust, accuracy, and peer-consensus in everything we host.</p>
+            <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-widest">Informational Blindspots</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-foreground">
+              Mapping The "Invisible Curriculum"
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              Higher education is crowded with unwritten rules. Here are the specific silos our platform targets and resolves.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {VALUES.map((val, i) => {
-              const Icon = val.icon;
-              return (
-                <div key={i} className="bg-card/40 backdrop-blur-md border border-border p-6 rounded-2xl shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 space-y-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground">{val.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed font-mono">{val.desc}</p>
+          {/* Grid of Glassmorphic Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Card 1: Placements */}
+            <div className="bg-card/40 backdrop-blur-md border border-border rounded-[28px] p-6 sm:p-8 hover:border-primary/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shadow-sm">
+                  <Clock size={22} />
                 </div>
-              );
-            })}
+                <h3 className="text-xl font-bold uppercase tracking-tight text-foreground">
+                  Hidden Placement Timelines
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  Off-campus recruitment calendars, application windows, and critical coding rounds are often shared within closed circles. InsightU structures these tracks openly.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-border/40 flex items-center text-xs font-mono text-primary font-bold group-hover:translate-x-1 transition-transform duration-300">
+                Resolving Timelines <ArrowRight size={12} className="ml-1" />
+              </div>
+            </div>
+
+            {/* Card 2: Faculty Preferences */}
+            <div className="bg-card/40 backdrop-blur-md border border-border rounded-[28px] p-6 sm:p-8 hover:border-primary/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center shadow-sm">
+                  <BookOpen size={22} />
+                </div>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-foreground">
+                  Professor Grading Style Guides
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  Every examiner has subjective unwritten guidelines on marks distribution and presentation shortcuts. Peers share cheatsheets detailing these custom styles to bypass setbacks.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-border/40 flex items-center text-xs font-mono text-primary font-bold group-hover:translate-x-1 transition-transform duration-300">
+                Academic Cheatsheets <ArrowRight size={12} className="ml-1" />
+              </div>
+            </div>
+
+            {/* Card 3: Administrative Bottlenecks */}
+            <div className="bg-card/40 backdrop-blur-md border border-border rounded-[28px] p-6 sm:p-8 hover:border-primary/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shadow-sm">
+                  <AlertTriangle size={22} />
+                </div>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-foreground">
+                  Opaque Registration Systems
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  Navigating prerequisite codes, lab slot allocations, and elective validation is highly confusing for first-generation students. Our guide matrices map steps clearly.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-border/40 flex items-center text-xs font-mono text-primary font-bold group-hover:translate-x-1 transition-transform duration-300">
+                Navigating Steps <ArrowRight size={12} className="ml-1" />
+              </div>
+            </div>
+
+            {/* Card 4: Hidden Scholarships */}
+            <div className="bg-card/40 backdrop-blur-md border border-border rounded-[28px] p-6 sm:p-8 hover:border-primary/40 hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-sm">
+                  <Award size={22} />
+                </div>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-foreground">
+                  Unadvertised Financial Awards
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  Local foundations, emergency textbook grants, and travel stipend opportunities are rarely publicized. InsightU structures peer-verified funding directories dynamically.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-border/40 flex items-center text-xs font-mono text-primary font-bold group-hover:translate-x-1 transition-transform duration-300">
+                Unlocking Grants <ArrowRight size={12} className="ml-1" />
+              </div>
+            </div>
+
           </div>
         </section>
 
-        {/* ===== TEAM SECTION ===== */}
-        <section className="space-y-12">
+        {/* Section 3: The Mechanical Pillars */}
+        <section className="space-y-12 bg-secondary/30 border-y border-border py-16 px-6 sm:px-12 rounded-[32px] relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+
+          {/* Header */}
           <div className="text-center space-y-3">
-            <h2 className="text-3xl font-extrabold tracking-tight text-foreground uppercase">Meet Our Builders</h2>
-            <p className="text-muted-foreground text-sm max-w-xl mx-auto">A team of dedicated college seniors and platform architects working for structural campus equality.</p>
+            <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-widest">Platform Core Architecture</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-foreground">
+              Our Mechanical Pillars
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              How we construct technology to secure absolute trust and real-time accuracy across crowdsourced knowledge.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TEAM_MEMBERS.map((member, i) => (
-              <div key={i} className="bg-card/40 backdrop-blur-md border border-border p-6 rounded-2xl shadow-sm flex flex-col items-center text-center group hover:scale-[1.02] hover:border-primary/30 transition-all duration-300">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-muted border-2 border-primary/20 mb-4 shadow-md">
-                  <img 
-                    src={member.avatar} 
-                    alt={member.name} 
-                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-8">
+            {/* Pillar A */}
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <CheckCircle2 size={24} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg sm:text-xl font-extrabold uppercase tracking-tight text-foreground">
+                  Decentralized Peer Consensus
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  Seniors post checklists, placement files, or study material. The campus student body atomically votes on validity. Verified files get boosted, while false updates are suppressed immediately.
+                </p>
+              </div>
+            </div>
+
+            {/* Pillar B */}
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Activity size={24} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg sm:text-xl font-extrabold uppercase tracking-tight text-foreground">
+                  Automated Timeline Nudge Engine
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  No more missed forms. Our predictive campus signal script listens to shared calendar markers. If an elective request, exam seating, or scholarship closes in under 48 hours, it nudges your dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4: Team Profile Grid */}
+        <section className="space-y-12">
+          {/* Header */}
+          <div className="text-center space-y-3">
+            <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-widest font-semibold">Creators Behind CodeSpark</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-foreground">
+              Meet Team CodeSpark
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              We are a branch of designers, developers, and writers dedicating code to empower first-generation students.
+            </p>
+          </div>
+
+          {/* Clean Profile Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+
+            {/* Creator 1 */}
+            <div className="bg-card/40 border border-border rounded-[24px] p-6 text-center hover:border-primary/30 hover:shadow-sm transition-all duration-300 flex flex-col justify-between items-center group">
+              <div className="space-y-4">
+                {/* Image Avatar Container */}
+                <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-background shadow-md relative">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193501/member1_qz0d02.jpg"
+                    alt="Subhabrata Saha"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <h3 className="text-base font-bold text-foreground">{member.name}</h3>
-                <span className="text-[10px] text-primary font-mono uppercase tracking-wider mt-1">{member.role}</span>
-                <p className="text-xs text-muted-foreground mt-3 font-mono leading-relaxed px-2">{member.bio}</p>
+                <div>
+                  <h4 className="text-base font-extrabold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                    Subhabrata Saha
+                  </h4>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider mt-0.5">
+                    Lead Systems Architect
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Engineered the decentralized peer validation consensus algorithms.
+                </p>
               </div>
-            ))}
+              <div className="flex gap-3 mt-6">
+                <Link href="https://github.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/github_oztvl3.png"
+                    alt="GitHub"
+                    className="w-6 h-6 object-contain opacity-80 dark:invert group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+                <Link href="https://linkedin.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/linkedin_vwk7cd.png"
+                    alt="LinkedIn"
+                    className="w-6 h-6 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+                <Link href="https://github.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/web_p9n1v6.png"
+                    alt="Website"
+                    className="w-6 h-6 object-contain opacity-80 dark:invert group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+              </div>
+            </div>
+
+            {/* Creator 2 */}
+            <div className="bg-card/40 border border-border rounded-[24px] p-6 text-center hover:border-primary/30 hover:shadow-sm transition-all duration-300 flex flex-col justify-between items-center group">
+              <div className="space-y-4">
+                {/* Image Avatar Container */}
+                <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-background shadow-md relative">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193500/member3_wtyp5z.jpg"
+                    alt="Ananya Roy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-base font-extrabold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                    Ananya Roy
+                  </h4>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider mt-0.5">
+                    Lead UI/UX Engineer
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Designed the beautiful Bento Grid catalog and primary interactive coordinates.
+                </p>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Link href="https://github.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/github_oztvl3.png"
+                    alt="GitHub"
+                    className="w-6 h-6 object-contain opacity-80 dark:invert group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+                <Link href="https://linkedin.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/linkedin_vwk7cd.png"
+                    alt="LinkedIn"
+                    className="w-6 h-6 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+              </div>
+            </div>
+
+            {/* Creator 3 */}
+            <div className="bg-card/40 border border-border rounded-[24px] p-6 text-center hover:border-primary/30 hover:shadow-sm transition-all duration-300 flex flex-col justify-between items-center group">
+              <div className="space-y-4">
+                {/* Image Avatar Container */}
+                <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-background shadow-md relative">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193500/member2_mzr66v.jpg"
+                    alt="Vikram Aditya"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-base font-extrabold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                    Vikram Aditya
+                  </h4>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider mt-0.5">
+                    Database schema lead
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Developed transactional polling frameworks and data pipelines.
+                </p>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Link href="https://github.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/github_oztvl3.png"
+                    alt="GitHub"
+                    className="w-6 h-6 object-contain opacity-80 dark:invert group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+                <Link href="https://linkedin.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/linkedin_vwk7cd.png"
+                    alt="LinkedIn"
+                    className="w-6 h-6 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+              </div>
+            </div>
+
+            {/* Creator 4 */}
+            <div className="bg-card/40 border border-border rounded-[24px] p-6 text-center hover:border-primary/30 hover:shadow-sm transition-all duration-300 flex flex-col justify-between items-center group">
+              <div className="space-y-4">
+                {/* Image Avatar Container */}
+                <div className="w-20 h-20 rounded-full overflow-hidden mx-auto ring-4 ring-background shadow-md relative">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193500/member4_gdch6v.jpg"
+                    alt="Riya Sen"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-base font-extrabold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                    Riya Sen
+                  </h4>
+                  <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider mt-0.5">
+                    Product Strategist
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Aligned features to secure first-generation student requirements perfectly.
+                </p>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Link href="https://github.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/github_oztvl3.png"
+                    alt="GitHub"
+                    className="w-6 h-6 object-contain opacity-80 dark:invert group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+                <Link href="https://linkedin.com" className="w-8 h-8 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center transition-colors">
+                  <img
+                    src="https://res.cloudinary.com/drfodwc7q/image/upload/v1779193980/linkedin_vwk7cd.png"
+                    alt="LinkedIn"
+                    className="w-6 h-6 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
+              </div>
+            </div>
+
           </div>
         </section>
 
-        {/* ===== CALL TO ACTION ===== */}
-        <section className="relative rounded-3xl overflow-hidden border border-border bg-card/30 backdrop-blur-xl p-8 sm:p-12 text-center space-y-6 shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 pointer-events-none" />
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground uppercase">
-            Ready to Shape the Campus Narrative?
-          </h2>
-          <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
-            Join thousands of active freshers unlocking verified intelligence, or register as a senior contributor today.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <Link
-              href="/signup"
-              className={cn(buttonVariants({ size: 'lg' }), "rounded-full font-bold uppercase tracking-wider text-xs px-8 h-12 shadow-md hover:scale-105 transition-all")}
-            >
+        {/* Section 5: Dynamic Join CTA */}
+        <section className="bg-primary text-primary-foreground p-8 sm:p-12 rounded-[28px] text-center space-y-6 shadow-xl relative overflow-hidden">
+          {/* Accent Glow inside colored CTA card */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+          <div className="relative z-10 max-w-xl mx-auto space-y-5">
+            <span className="text-[10px] font-bold uppercase tracking-widest font-mono text-[#9EFF2B] bg-white/10 px-3 py-1 rounded-full">
               Get Started
-            </Link>
-            <Link
-              href="/dashboard/share"
-              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), "rounded-full font-bold uppercase tracking-wider text-xs px-8 h-12 hover:scale-105 transition-all border-border")}
-            >
-              Share Intelligence
-            </Link>
+            </span>
+            <h3 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight">
+              Ready to unlock your branch's potential?
+            </h3>
+            <p className="text-xs sm:text-sm text-primary-foreground/90 font-medium font-sans">
+              Verify your college email, link up with seniors, and access thousands of vetted guides and unwritten tracks instantly.
+            </p>
+            <div className="pt-4 flex flex-wrap justify-center gap-4">
+              <Link href="/auth/register">
+                <Button className="bg-white text-primary hover:bg-[#9EFF2B] hover:text-black font-extrabold transition-all duration-300">
+                  Register Profile
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 font-bold transition-all duration-300">
+                  Explore Intel Feed
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
 

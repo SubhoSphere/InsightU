@@ -313,6 +313,77 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Section 2: Live Institutional Pulse */}
+      <section className="py-20 px-4 sm:px-8 max-w-7xl mx-auto relative z-10">
+        
+        {/* Section Header */}
+        <div className="text-center mb-16 space-y-3 relative z-10">
+          <span className="text-xs font-bold text-primary uppercase tracking-widest font-mono">
+            Institutional Pulse
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-foreground leading-tight">
+            Campus Verification Stream
+          </h2>
+          <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
+            Real-time verified intelligence from across the campus, authenticated directly by the student network.
+          </p>
+        </div>
+
+        {/* Minimalist Card Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+          {MOCK_POSTS.map((post) => (
+            <div
+              key={post.id}
+              className="group bg-card/60 backdrop-blur-md border border-border rounded-[20px] p-6 hover:shadow-md hover:border-primary/45 transition-all duration-300 flex flex-col justify-between"
+            >
+              <div>
+                {/* Top Row Badges */}
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+                    {post.category}
+                  </span>
+                  <div className="flex items-center text-xs font-bold text-emerald-500">
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                    Score: {post.reliabilityScore}%
+                  </div>
+                </div>
+
+                {/* Post Title */}
+                <h3 className="text-base font-extrabold text-foreground mb-3 group-hover:text-primary transition-colors leading-snug">
+                  {post.title}
+                </h3>
+
+                {/* Campus Branch Tag */}
+                <span className="text-xs text-muted-foreground font-mono">
+                  # {post.branchTag}
+                </span>
+              </div>
+
+              {/* Bottom attachment/consensus audit status */}
+              <div className="mt-6 pt-4 border-t border-border/50">
+                {post.file ? (
+                  <div className="w-full bg-secondary/80 hover:bg-primary hover:text-white transition-all duration-200 py-2.5 px-3.5 rounded-xl border border-border/40 flex items-center justify-between cursor-pointer group/attachment">
+                    <span className="flex items-center gap-2 text-xs text-muted-foreground group-hover/attachment:text-white transition-colors">
+                      <FileText className="w-4 h-4 text-primary group-hover/attachment:text-white" />
+                      {post.file.fileKey}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-primary group-hover/attachment:text-white">
+                      File &rarr;
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground/80">
+                    <span>Status: Verified</span>
+                    <span className="text-emerald-500 font-bold uppercase tracking-wider text-[10px]">Secure Node</span>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Section 1.5: Platform Features (Bento Grid) */}
       <section id="features" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto relative z-10 scroll-mt-16">
         <div className="text-center mb-16 space-y-4">
@@ -423,42 +494,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-        </div>
-      </section>
-
-      {/* Section 2: Live Institutional Pulse */}
-      <section className="py-24 px-4 sm:px-8 max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight mb-4 text-foreground">Live Institutional Pulse</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">Real-time intelligence from across the campus, verified by the student body.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MOCK_POSTS.map((post) => (
-            <div key={post.id} className="group relative bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between">
-              <div>
-                <div className="flex items-start justify-between mb-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                    {post.category}
-                  </span>
-                  <div className="flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md">
-                    <ShieldCheck className="w-3 h-3 mr-1" />
-                    Score: {post.reliabilityScore}
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors">{post.title}</h3>
-                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-secondary text-secondary-foreground mb-4">
-                  {post.branchTag}
-                </span>
-              </div>
-
-              {post.file && (
-                <div className="mt-4 pt-4 border-t border-border flex items-center text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Attachment: {post.file.fileKey}
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </section>
 

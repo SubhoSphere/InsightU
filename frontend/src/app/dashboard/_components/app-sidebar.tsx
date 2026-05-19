@@ -19,6 +19,7 @@ import {
 import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useAppSelector } from "@/store/store"
 
 // This is sample data.
 const data = {
@@ -30,7 +31,7 @@ const data = {
   navMain: [
     {
       title: "Overview",
-      url: "#",
+      url: "/dashboard",
       icon: (
         <TerminalSquareIcon
         />
@@ -39,94 +40,74 @@ const data = {
     },
     {
       title: "Feeds",
-      url: "#",
+      url: "/dashboard/feed",
       icon: (
         <BotIcon
         />
       ),
     },
     {
-      title: "Documentation",
-      url: "#",
+      title: "Contribute",
+      url: "/dashboard/contribute",
       icon: (
         <BookOpenIcon
         />
       ),
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
     }
   ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: (
-        <FrameIcon
-        />
-      ),
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: (
-        <PieChartIcon
-        />
-      ),
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: (
-        <MapIcon
-        />
-      ),
-    },
-  ],
+  // projects: [
+  //   {
+  //     name: "Account Settings",
+  //     url: "/dashboard/account",
+  //     icon: (
+  //       <Settings2Icon
+  //       />
+  //     ),
+  //   }
+  // ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAppSelector((state) => state.auth);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Dynamically filter sidebar items based on role authorization after mounting
+  const filteredNavMain = !mounted
+    ? data.navMain
+    : data.navMain.filter((item) => {
+        if (item.title === "Contribute" && (user?.role as string) === "FRESHER") {
+          return false;
+        }
+        return true;
+      });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
+              render={<Link href="/" className="flex gap-0.5" />}
               className="data-[slot=sidebar-menu-button]:p-1.5! hover:bg-transparent"
             >
-              <Link href="/" className="flex gap-0.5">
-                <Image src={"https://res.cloudinary.com/drfodwc7q/image/upload/v1779172977/Orange_Blue_Modern_Professional_Letter_I_Business_Logo-removebg-preview_egwy4g.png"} alt='insightU_logo' width={100} height={100} className="h-7 w-7 object-contain object-center bg-white rounded" />
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold text-2xl">InsightU</span>
-                </div>
-
-              </Link>
+              <Image src={"https://res.cloudinary.com/drfodwc7q/image/upload/v1779172977/Orange_Blue_Modern_Professional_Letter_I_Business_Logo-removebg-preview_egwy4g.png"} alt='insightU_logo' width={100} height={100} className="h-7 w-7 object-contain object-center bg-white rounded" />
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold text-2xl">InsightU</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={filteredNavMain} />
+        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

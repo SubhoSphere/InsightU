@@ -46,7 +46,13 @@ const categoryData = [
   { name: 'Admin Policies', value: 15 },
 ];
 // Beautiful vibrant colors for the pie chart
-const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'];
+// Beautiful theme-aware colors for the pie chart
+const COLORS = [
+  'hsl(var(--primary))',
+  'oklch(0.6801 0.1583 276.9349 / 0.8)',
+  'oklch(0.5106 0.2301 276.9656 / 0.65)',
+  'oklch(0.4568 0.2146 277.0229 / 0.5)'
+];
 
 // --- Mock Data for Table ---
 const recentActivity = [
@@ -75,7 +81,7 @@ export default function DashboardOverviewPage() {
                 <h2 className="text-3xl font-bold tracking-tight text-foreground">
                     Hello, {firstName} <span className="inline-block animate-wave">👋</span>
                 </h2>
-                <p className="text-muted-foreground text-lg">
+                <p className="text-muted-foreground text-sm max-w-md">
                     Here is your campus intelligence summary for today.
                 </p>
             </div>
@@ -84,14 +90,14 @@ export default function DashboardOverviewPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 
                 {/* Card 1: Total Intel */}
-                <div className="bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all">
+                <div className="bg-card/40 backdrop-blur-md border border-border rounded-[20px] p-6 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center justify-between space-y-0 pb-2">
-                        <p className="text-sm font-medium text-muted-foreground tracking-wide">Total Intel Shared</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-mono">Total Intel Shared</p>
                         <Activity className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex flex-col mt-2">
-                        <span className="text-4xl font-bold text-foreground">1,248</span>
-                        <p className="text-xs text-green-500 font-medium flex items-center mt-1">
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">1,248</span>
+                        <p className="text-xs text-emerald-500 font-bold flex items-center mt-1">
                             <TrendingUp className="h-3 w-3 mr-1" />
                             +12% from last month
                         </p>
@@ -99,14 +105,14 @@ export default function DashboardOverviewPage() {
                 </div>
 
                 {/* Card 2: Verified Seniors */}
-                <div className="bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all">
+                <div className="bg-card/40 backdrop-blur-md border border-border rounded-[20px] p-6 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center justify-between space-y-0 pb-2">
-                        <p className="text-sm font-medium text-muted-foreground tracking-wide">Active Verified Seniors</p>
-                        <Users className="h-4 w-4 text-green-500" />
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-mono">Active Seniors</p>
+                        <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex flex-col mt-2">
-                        <span className="text-4xl font-bold text-foreground">342</span>
-                        <p className="text-xs text-green-500 font-medium flex items-center mt-1">
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">342</span>
+                        <p className="text-xs text-emerald-500 font-bold flex items-center mt-1">
                             <TrendingUp className="h-3 w-3 mr-1" />
                             +4 new this week
                         </p>
@@ -114,29 +120,29 @@ export default function DashboardOverviewPage() {
                 </div>
 
                 {/* Card 3: Trust Index */}
-                <div className="bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div className="bg-card/40 backdrop-blur-md border border-border rounded-[20px] p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
                     <div className="flex items-center justify-between space-y-0 pb-2 relative z-10">
-                        <p className="text-sm font-medium text-muted-foreground tracking-wide">Your Trust Index</p>
-                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-mono">Your Trust Index</p>
+                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
                     </div>
                     <div className="flex flex-col mt-2 relative z-10">
-                        <span className="text-4xl font-bold text-foreground">94<span className="text-xl text-muted-foreground">/100</span></span>
-                        <p className="text-xs text-green-500 font-medium flex items-center mt-1">
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">94<span className="text-xl text-muted-foreground">/100</span></span>
+                        <p className="text-xs text-emerald-500 font-bold flex items-center mt-1">
                             Elite Verification Tier
                         </p>
                     </div>
                 </div>
 
                 {/* Card 4: Flagged Content */}
-                <div className="bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-all">
+                <div className="bg-card/40 backdrop-blur-md border border-border rounded-[20px] p-6 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center justify-between space-y-0 pb-2">
-                        <p className="text-sm font-medium text-muted-foreground tracking-wide">Pending Reviews</p>
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-mono">Pending Reviews</p>
+                        <AlertCircle className="h-4 w-4 text-amber-500" />
                     </div>
                     <div className="flex flex-col mt-2">
-                        <span className="text-4xl font-bold text-foreground">14</span>
-                        <p className="text-xs text-orange-500 font-medium flex items-center mt-1">
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">14</span>
+                        <p className="text-xs text-amber-500 font-bold flex items-center mt-1">
                             <TrendingDown className="h-3 w-3 mr-1" />
                             Needs peer moderation
                         </p>
@@ -146,22 +152,22 @@ export default function DashboardOverviewPage() {
             </div>
 
             {/* Charts Middle Row */}
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
                 
-                {/* Area Chart: Intelligence Pulse (Spans 4 cols on large screens) */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-4 bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm">
+                {/* Area Chart: Intelligence Pulse */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-4 bg-card/40 backdrop-blur-md border border-border rounded-[20px] p-6 shadow-sm">
                     <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-foreground">Network Contribution Pulse</h3>
-                        <p className="text-sm text-muted-foreground">Intelligence volume over the last 7 days</p>
+                        <h3 className="text-base font-extrabold text-foreground uppercase tracking-wider font-mono text-xs text-primary mb-1">Network Contribution Pulse</h3>
+                        <p className="text-xs text-muted-foreground">Intelligence volume over the last 7 days</p>
                     </div>
-                    <div className="h-[300px] w-full">
+                    <div className="h-[280px] w-full">
                         {mounted && (
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={pulseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                            <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35}/>
+                                            <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -169,13 +175,13 @@ export default function DashboardOverviewPage() {
                                         dataKey="day" 
                                         axisLine={false} 
                                         tickLine={false} 
-                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} 
+                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} 
                                         dy={10}
                                     />
                                     <YAxis 
                                         axisLine={false} 
                                         tickLine={false} 
-                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} 
+                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} 
                                     />
                                     <Tooltip 
                                         contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--foreground))' }}
@@ -184,7 +190,7 @@ export default function DashboardOverviewPage() {
                                     <Area 
                                         type="monotone" 
                                         dataKey="contributions" 
-                                        stroke="#3b82f6" 
+                                        stroke="var(--primary)" 
                                         strokeWidth={3}
                                         fillOpacity={1} 
                                         fill="url(#colorPulse)" 
@@ -195,13 +201,13 @@ export default function DashboardOverviewPage() {
                     </div>
                 </div>
 
-                {/* Pie Chart: Intel Categories (Spans 3 cols on large screens) */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm flex flex-col">
+                {/* Pie Chart: Intel Categories */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-card/40 backdrop-blur-md border border-border rounded-[20px] p-6 shadow-sm flex flex-col">
                     <div className="mb-2">
-                        <h3 className="text-lg font-semibold text-foreground">Intelligence by Category</h3>
-                        <p className="text-sm text-muted-foreground">Distribution of total active grid posts</p>
+                        <h3 className="text-base font-extrabold text-foreground uppercase tracking-wider font-mono text-xs text-primary mb-1">Intelligence by Category</h3>
+                        <p className="text-xs text-muted-foreground">Distribution of total active grid posts</p>
                     </div>
-                    <div className="flex-1 h-[250px] w-full relative">
+                    <div className="flex-1 h-[220px] w-full relative">
                         {mounted && (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -209,9 +215,9 @@ export default function DashboardOverviewPage() {
                                         data={categoryData}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={70}
-                                        outerRadius={95}
-                                        paddingAngle={5}
+                                        innerRadius={65}
+                                        outerRadius={85}
+                                        paddingAngle={4}
                                         dataKey="value"
                                         stroke="none"
                                     >
@@ -228,16 +234,16 @@ export default function DashboardOverviewPage() {
                         )}
                         {/* Center Text for Donut Chart */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
-                            <span className="text-3xl font-bold text-foreground">100%</span>
-                            <span className="text-xs text-muted-foreground">Coverage</span>
+                            <span className="text-2xl font-black text-foreground">100%</span>
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Coverage</span>
                         </div>
                     </div>
                     {/* Custom Legend */}
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/50">
                         {categoryData.map((item, index) => (
                             <div key={item.name} className="flex items-center">
-                                <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                                <span className="text-xs text-muted-foreground font-medium">{item.name}</span>
+                                <div className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                <span className="text-xs text-muted-foreground font-semibold">{item.name}</span>
                                 <span className="ml-auto text-xs font-bold text-foreground">{item.value}%</span>
                             </div>
                         ))}
