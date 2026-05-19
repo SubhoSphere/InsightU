@@ -2,13 +2,17 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { securityHeaders, apiLimiter } from './middlewares/security.middleware';
+import { errorHandler } from './middlewares/error.middleware';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Global Security Wrappers & Standard Middleware
+app.use(securityHeaders);
+app.use(apiLimiter);
 app.use(cors());
 app.use(express.json());
 
@@ -23,10 +27,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.use('/api', apiRoutes);
 
 // Global Error Handler
-app.use((err: any, req: Request, res: Response, next: import('express').NextFunction) => {
-  console.error('[Error Handler]:', err.message || err);
-  res.status(500).json({ success: false, error: err.message || 'Internal Server Error' });
-});
+app.use(errorHandler);
 
 // Database connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/insightu';
