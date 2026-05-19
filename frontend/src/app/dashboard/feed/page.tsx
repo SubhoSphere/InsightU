@@ -27,6 +27,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // --- Types & Interfaces ---
 type Urgency = 'LOW' | 'MEDIUM' | 'CRITICAL';
@@ -100,11 +101,13 @@ const INITIAL_POSTS: IntelligencePost[] = [
 ];
 
 export default function FeedDashboardPage() {
-    const { user } = useAppSelector((state) => state.auth);
+    const { user, token } = useAppSelector((state) => state.auth);
 
-    // --- State Controllers ---
-    const [posts, setPosts] = useState<IntelligencePost[]>([]);
-    const [isFetching, setIsFetching] = useState(true);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Filter States
     const [searchQuery, setSearchQuery] = useState('');
@@ -112,18 +115,81 @@ export default function FeedDashboardPage() {
     const [urgencyFilter, setUrgencyFilter] = useState<string>('ALL');
     const [branchFilter, setBranchFilter] = useState('');
 
-    // Interaction States (Locking & Optimistic UI)
-    const [votingStates, setVotingStates] = useState<Record<string, { loading: boolean, voted: 'up' | 'down' | null }>>({});
+    // --- TanStack Query Query & Mutations ---
+    const queryClient = useQueryClient();
 
-    // Simulate Initial Data Load
-    useEffect(() => {
-        const fetchPosts = async () => {
-            await new Promise(resolve => setTimeout(resolve, 800)); // Network delay
-            setPosts(INITIAL_POSTS);
-            setIsFetching(false);
-        };
-        fetchPosts();
-    }, []);
+    const { data: postsData, isLoading: isFetching } = useQuery({
+        queryKey: ['feed-posts', user?.collegeId],
+        queryFn: async () => {
+            if (!user?.collegeId) return [];
+
+            const queryParams = new URLSearchParams({
+                collegeId: user.collegeId,
+            });
+
+            const res = await fetch(`http://localhost:5000/api/intel?${queryParams.toString()}`);
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to fetch feed posts.');
+
+            return (json.data || []).map((post: any) => {
+                let netScore = 0;
+                let userVoteDirection: 'up' | 'down' | null = null;
+
+                if (post.votes && Array.isArray(post.votes)) {
+                    for (const vote of post.votes) {
+                        const voterRole = vote.voter?.role || 'FRESHER';
+                        const voteVal = vote.voteType === 'VALID' ? (voterRole === 'VERIFIED_SENIOR' ? 10 : 5) : (voterRole === 'VERIFIED_SENIOR' ? -20 : -10);
+                        netScore += voteVal;
+
+                        if (user && vote.voterId === user.id) {
+                            userVoteDirection = vote.voteType === 'VALID' ? 'up' : 'down';
+                        }
+                    }
+                }
+
+                return {
+                    id: post.id,
+                    authorName: post.author?.name || 'Anonymous Peer',
+                    authorRole: post.author?.role || 'FRESHER',
+                    credibilityScore: post.author?.reliabilityScore || 0,
+                    category: post.category === 'ACADEMIC_NORM' ? 'ACADEMIC_ADMINISTRATION' : post.category,
+                    branchTag: post.branchTag,
+                    urgency: post.urgency,
+                    title: post.title,
+                    description: post.description,
+                    fileUrl: post.file?.fileUrl || undefined,
+                    netConfidence: netScore,
+                    userVote: userVoteDirection,
+                };
+            });
+        },
+        enabled: !!user?.collegeId,
+    });
+
+    const posts = postsData || [];
+
+    const voteMutation = useMutation({
+        mutationFn: async ({ postId, direction }: { postId: string; direction: 'up' | 'down' }) => {
+            const voteType = direction === 'up' ? 'VALID' : 'INVALID';
+            const res = await fetch('http://localhost:5000/api/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ postId, voteType }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to submit validation vote.');
+            return json.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['feed-posts'] });
+        },
+        onError: (err: any) => {
+            alert(err.message || 'You can only vote once per post.');
+        },
+    });
 
     // --- Filter Logic ---
     const filteredPosts = useMemo(() => {
@@ -140,46 +206,11 @@ export default function FeedDashboardPage() {
 
     // --- Interaction Handlers ---
     const handleVote = async (postId: string, direction: 'up' | 'down') => {
-        if (votingStates[postId]?.loading) return;
-
-        // Core Modifiers: verified seniors have 2x authority
-        const voteWeight = user?.role === 'VERIFIED_SENIOR' ? 10 : 5;
-
-        setVotingStates(prev => ({
-            ...prev,
-            [postId]: { loading: true, voted: prev[postId]?.voted || null }
-        }));
-
-        // Mock Backend /api/verify execution
-        await new Promise(resolve => setTimeout(resolve, 600));
-
-        // Optimistic UI Update
-        setPosts(currentPosts => currentPosts.map(post => {
-            if (post.id === postId) {
-                const previousVote = votingStates[postId]?.voted;
-                let scoreChange = 0;
-
-                if (previousVote === direction) {
-                    scoreChange = direction === 'up' ? -voteWeight : voteWeight; // Undo
-                } else {
-                    const baseChange = direction === 'up' ? voteWeight : -voteWeight;
-                    scoreChange = previousVote ? baseChange * 2 : baseChange; // Swap
-                }
-
-                return { ...post, netConfidence: post.netConfidence + scoreChange };
-            }
-            return post;
-        }));
-
-        // Unlock and set active vote
-        setVotingStates(prev => ({
-            ...prev,
-            [postId]: {
-                loading: false,
-                voted: prev[postId]?.voted === direction ? null : direction
-            }
-        }));
+        if (voteMutation.isPending) return;
+        voteMutation.mutate({ postId, direction });
     };
+
+    if (!mounted) return null;
 
     return (
         <div className="min-h-screen bg-background pt-6 pb-4 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
@@ -214,10 +245,10 @@ export default function FeedDashboardPage() {
                                     <div className="flex flex-col items-center justify-start gap-2 pt-2 w-12 shrink-0">
                                         <button
                                             onClick={() => handleVote(post.id, 'up')}
-                                            disabled={votingStates[post.id]?.loading}
+                                            disabled={voteMutation.isPending && voteMutation.variables?.postId === post.id}
                                             className={cn(
                                                 "p-2 rounded-lg transition-all hover:bg-green-500/20 text-muted-foreground hover:text-green-500 disabled:opacity-50",
-                                                votingStates[post.id]?.voted === 'up' && "bg-green-500/20 text-green-500"
+                                                post.userVote === 'up' && "bg-green-500/20 text-green-500"
                                             )}
                                         >
                                             <ArrowUp className="w-5 h-5" strokeWidth={3} />
@@ -227,7 +258,7 @@ export default function FeedDashboardPage() {
                                             "font-bold text-sm",
                                             post.netConfidence > 10 ? "text-green-500" : post.netConfidence < 0 ? "text-destructive" : "text-foreground"
                                         )}>
-                                            {votingStates[post.id]?.loading ? (
+                                            {voteMutation.isPending && voteMutation.variables?.postId === post.id ? (
                                                 <Loader2 className="w-4 h-4 animate-spin opacity-50 mx-auto" />
                                             ) : (
                                                 post.netConfidence
@@ -236,10 +267,10 @@ export default function FeedDashboardPage() {
 
                                         <button
                                             onClick={() => handleVote(post.id, 'down')}
-                                            disabled={votingStates[post.id]?.loading}
+                                            disabled={voteMutation.isPending && voteMutation.variables?.postId === post.id}
                                             className={cn(
                                                 "p-2 rounded-lg transition-all hover:bg-destructive/20 text-muted-foreground hover:text-destructive disabled:opacity-50",
-                                                votingStates[post.id]?.voted === 'down' && "bg-destructive/20 text-destructive"
+                                                post.userVote === 'down' && "bg-destructive/20 text-destructive"
                                             )}
                                         >
                                             <ArrowDown className="w-5 h-5" strokeWidth={3} />

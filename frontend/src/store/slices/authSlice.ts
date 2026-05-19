@@ -7,6 +7,7 @@ export interface User {
   role: 'FRESHER' | 'VERIFIED_SENIOR';
   collegeId: string;
   reliabilityScore: number;
+  avatarUrl?: string | null;
 }
 
 export interface AuthState {
@@ -84,9 +85,20 @@ export const authSlice = createSlice({
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
+    },
+    updateUser: (state, action: PayloadAction<{ name: string; avatarUrl?: string | null }>) => {
+      if (state.user) {
+        state.user.name = action.payload.name;
+        if (action.payload.avatarUrl !== undefined) {
+          state.user.avatarUrl = action.payload.avatarUrl;
+        }
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
+      }
     }
   },
 });
 
-export const { setCredentials, logout, setLoading } = authSlice.actions;
+export const { setCredentials, logout, setLoading, updateUser } = authSlice.actions;
 export default authSlice.reducer;

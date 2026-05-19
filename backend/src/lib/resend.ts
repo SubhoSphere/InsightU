@@ -119,3 +119,37 @@ export async function sendPasswordResetEmail(to: string, otp: string) {
     return { id: 'fallback-id' };
   }
 }
+
+/**
+ * Sends a support ticket confirmation email to the user.
+ */
+export async function sendSupportConfirmationEmail(to: string, name: string, category: string, ticketId: string) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [to],
+      subject: `Support Ticket Created: #${ticketId.slice(-6).toUpperCase()}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #fafafa; border-radius: 12px; border: 1px solid #eee;">
+          <h2 style="color: #111; margin-bottom: 8px;">Hi ${name},</h2>
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">
+            Your support request has been logged successfully under ticket ID: <strong style="color: #111;">#${ticketId.slice(-6).toUpperCase()}</strong>.
+          </p>
+          <div style="background: #fff; border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin: 24px 0;">
+            <p style="margin: 0; font-size: 13px; color: #666;"><strong>Category:</strong> ${category.toUpperCase()}</p>
+            <p style="margin: 8px 0 0 0; font-size: 13px; color: #666;"><strong>Status:</strong> OPEN</p>
+          </div>
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">
+            Our coordination team will audit and reply within 24-48 hours.
+          </p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+          <p style="color: #aaa; font-size: 11px; text-align: center;">InsightU — Campus Support Desk</p>
+        </div>
+      `,
+    });
+    return data;
+  } catch (err) {
+    console.warn('[Resend] Support ticket confirmation email error:', err);
+    return { id: 'fallback-id' };
+  }
+}

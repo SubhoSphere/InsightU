@@ -58,21 +58,45 @@ export default function SupportPage() {
   // Status State
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMsg(null);
 
-    // Mock server transaction
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const response = await fetch('http://localhost:5000/api/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          category,
+          phone: phone || undefined,
+          description,
+        }),
+      });
 
-    setIsLoading(false);
-    setIsSuccess(true);
+      const result = await response.json();
 
-    // Reset form
-    setCategory('');
-    setPhone('');
-    setDescription('');
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to submit support request.');
+      }
+
+      setIsSuccess(true);
+      // Reset form
+      setCategory('');
+      setPhone('');
+      setDescription('');
+    } catch (err: any) {
+      console.error('Support ticket submission error:', err);
+      setErrorMsg(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -121,6 +145,11 @@ export default function SupportPage() {
                 <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
                   Have a question, data appeal, or verification anomaly? File a ticket directly with our coordination team.
                 </p>
+                {errorMsg && (
+                  <p className="text-xs text-red-500 font-bold bg-red-500/10 border border-red-500/20 p-2.5">
+                    ⚠️ {errorMsg}
+                  </p>
+                )}
               </div>
 
               {/* Form Input fields formatted with sleek bottom borders */}

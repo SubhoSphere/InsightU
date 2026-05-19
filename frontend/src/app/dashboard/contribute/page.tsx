@@ -31,9 +31,10 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Contribution {
-    id: number;
+    id: string;
     title: string;
     category: string;
     urgency: string;
@@ -45,42 +46,24 @@ interface Contribution {
 
 export default function ContributePage() {
     const router = useRouter();
-    const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+    const { isAuthenticated, user, token } = useAppSelector((state) => state.auth);
+
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // --- Auth Protection ---
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (mounted && !isAuthenticated) {
             router.push('/login');
         }
-    }, [isAuthenticated, router]);
-
-    // --- Contributions State (Initialized with gorgeous mock data) ---
-    const [contributions, setContributions] = useState<Contribution[]>([
-        {
-            id: 1,
-            title: "Unexpected Prerequisite Change for ENGR-301",
-            category: "ACADEMIC_ADMINISTRATION",
-            urgency: "CRITICAL",
-            branchTag: "CSE",
-            description: "The course coordinator has updated the prerequisite list to mandate ENGR-201 starting next semester. There is no waiver option available.",
-            date: "2 hours ago",
-            fileAttachment: null
-        },
-        {
-            id: 2,
-            title: "Opportunity Grant Shift 2026",
-            category: "SCHOLARSHIP_DEADLINE",
-            urgency: "MEDIUM",
-            branchTag: "General",
-            description: "The financial aid office is moving the deadline forward by 10 days to process spring awards faster. Update your applications immediately.",
-            date: "1 day ago",
-            fileAttachment: { name: "grant_schedule.pdf", fileUrl: "#" }
-        }
-    ]);
+    }, [isAuthenticated, router, mounted]);
 
     // --- Modal / Dialog Toggle State ---
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     // --- Dialog Form Fields ---
     const [title, setTitle] = useState('');
@@ -96,9 +79,120 @@ export default function ContributePage() {
     const [uploadedFile, setUploadedFile] = useState<{ fileUrl: string; fileKey: string; name: string } | null>(null);
     const [uploadError, setUploadError] = useState<string | null>(null);
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    // --- TanStack Query Query & Mutations ---
+    const queryClient = useQueryClient();
 
-    // --- Cloudinary File Uploader ---
+    const { data: postsData, isLoading: isLoadingFeed } = useQuery({
+        queryKey: ['user-posts', token],
+        queryFn: async () => {
+            if (!token) return [];
+            const res = await fetch('http://localhost:5000/api/intel/user', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to fetch posts');
+            
+            return (json.data || []).map((post: any) => ({
+                id: post.id,
+                title: post.title,
+                category: post.category === 'ACADEMIC_NORM' ? 'ACADEMIC_ADMINISTRATION' : post.category,
+                urgency: post.urgency,
+                branchTag: post.branchTag,
+                description: post.description,
+                date: new Date(post.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                }),
+                fileAttachment: post.file ? {
+                    name: post.file.fileKey || 'Attached File',
+                    fileUrl: post.file.fileUrl,
+                    fileKey: post.file.fileKey,
+                } : null,
+            }));
+        },
+        enabled: !!token,
+    });
+
+    const contributions: Contribution[] = postsData || [];
+
+    const createPostMutation = useMutation({
+        mutationFn: async (newPost: any) => {
+            const res = await fetch('http://localhost:5000/api/intel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(newPost),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to create post.');
+            return json.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+            setIsDialogOpen(false);
+            // Clear form
+            setTitle('');
+            setCategory('');
+            setUrgency('');
+            setBranchTag('');
+            setDescription('');
+            setUploadedFile(null);
+        },
+    });
+
+    const updatePostMutation = useMutation({
+        mutationFn: async ({ postId, updatedData }: { postId: string; updatedData: any }) => {
+            const res = await fetch(`http://localhost:5000/api/intel/${postId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(updatedData),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to update post.');
+            return json.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+            setIsDialogOpen(false);
+            setEditingId(null);
+            // Clear form
+            setTitle('');
+            setCategory('');
+            setUrgency('');
+            setBranchTag('');
+            setDescription('');
+            setUploadedFile(null);
+        },
+    });
+
+    const deletePostMutation = useMutation({
+        mutationFn: async (postId: string) => {
+            const res = await fetch(`http://localhost:5000/api/intel/${postId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to delete post.');
+            return json.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+        },
+    });
+
+    const isSubmitting = createPostMutation.isPending || updatePostMutation.isPending;
+
+    // --- Backend Secure File Uploader ---
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -114,30 +208,29 @@ export default function ContributePage() {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'unsigned_preset';
-            const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo';
 
-            formData.append('upload_preset', uploadPreset);
-
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+            const response = await fetch(`http://localhost:5000/api/upload`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
                 body: formData,
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
-                throw new Error('Failed to upload asset to Cloudinary.');
+                throw new Error(result.message || 'Failed to upload asset through the backend.');
             }
 
-            const data = await response.json();
-
             setUploadedFile({
-                fileUrl: data.secure_url,
-                fileKey: data.public_id,
+                fileUrl: result.data.fileUrl,
+                fileKey: result.data.fileKey,
                 name: file.name
             });
 
         } catch (error: any) {
-            console.error("Cloudinary upload failed:", error);
+            console.error("Backend Cloudinary upload failed:", error);
             setUploadError(error.message || 'An error occurred during upload.');
         } finally {
             setIsUploading(false);
@@ -186,9 +279,9 @@ export default function ContributePage() {
     };
 
     // --- Delete Contribution ---
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string) => {
         if (window.confirm("Are you sure you want to permanently revoke this intelligence record from the grid?")) {
-            setContributions(prev => prev.filter(item => item.id !== id));
+            deletePostMutation.mutate(id);
         }
     };
 
@@ -197,52 +290,26 @@ export default function ContributePage() {
         e.preventDefault();
         if (!title || !category || !urgency || !branchTag || !description) return;
 
-        setIsSubmitting(true);
+        const dbCategory = category === 'ACADEMIC_ADMINISTRATION' ? 'ACADEMIC_NORM' : category;
 
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        const payload = {
+            title,
+            category: dbCategory,
+            urgency,
+            branchTag,
+            description,
+            file: uploadedFile ? { fileUrl: uploadedFile.fileUrl, fileKey: uploadedFile.name } : undefined,
+        };
 
-            if (editingId !== null) {
-                // Update Path
-                setContributions(prev => prev.map(item => {
-                    if (item.id === editingId) {
-                        return {
-                            ...item,
-                            title,
-                            category,
-                            urgency,
-                            branchTag,
-                            description,
-                            fileAttachment: uploadedFile ? { name: uploadedFile.name, fileUrl: uploadedFile.fileUrl, fileKey: uploadedFile.fileKey } : null
-                        };
-                    }
-                    return item;
-                }));
-            } else {
-                // Create Path
-                const newRecord: Contribution = {
-                    id: Date.now(),
-                    title,
-                    category,
-                    urgency,
-                    branchTag,
-                    description,
-                    date: "Just now",
-                    fileAttachment: uploadedFile ? { name: uploadedFile.name, fileUrl: uploadedFile.fileUrl, fileKey: uploadedFile.fileKey } : null
-                };
-                setContributions(prev => [newRecord, ...prev]);
-            }
-
-            setIsDialogOpen(false);
-        } catch (err) {
-            console.error("Operation failed:", err);
-        } finally {
-            setIsSubmitting(false);
+        if (editingId !== null) {
+            updatePostMutation.mutate({ postId: editingId, updatedData: payload });
+        } else {
+            createPostMutation.mutate(payload);
         }
     };
 
-    // Prevent flash of content while checking auth
-    if (!isAuthenticated) return null;
+    // Prevent flash of content while checking auth and avoid hydration mismatch
+    if (!mounted || !isAuthenticated) return null;
 
     // Strict Fresher authorization lockout
     if ((user?.role as string) === 'FRESHER') {
@@ -307,7 +374,12 @@ export default function ContributePage() {
             </div>
 
             {/* Grid List View */}
-            {contributions.length === 0 ? (
+            {isLoadingFeed ? (
+                <div className="flex flex-col items-center justify-center p-16 bg-card/20 border border-dashed border-border rounded-3xl min-h-[300px]">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                    <p className="text-sm text-muted-foreground font-medium animate-pulse">Syncing with curriculum intelligence grid...</p>
+                </div>
+            ) : contributions.length === 0 ? (
                 <div className="bg-card/40 backdrop-blur-md border border-dashed border-border rounded-3xl p-16 text-center shadow-sm">
                     <ShieldAlert className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-foreground mb-2">No Curated Logs</h3>
@@ -454,7 +526,16 @@ export default function ContributePage() {
                                     <Label htmlFor="category" className="font-semibold text-foreground text-sm">Category</Label>
                                     <Select required value={category} onValueChange={setCategory}>
                                         <SelectTrigger className="w-full bg-background border-input h-11">
-                                            <SelectValue placeholder="Category" />
+                                            <SelectValue placeholder="Category">
+                                                {category ? (
+                                                    category === 'FACULTY_PREFERENCE' ? 'Faculty Pref' :
+                                                    category === 'SCHOLARSHIP_DEADLINE' ? 'Scholarship' :
+                                                    category === 'RECRUITMENT_PIPELINE' ? 'Recruitment' :
+                                                    category === 'ACADEMIC_ADMINISTRATION' ? 'Academic Admin' :
+                                                    category === 'ACADEMIC_NORM' ? 'Academic Admin' :
+                                                    category
+                                                ) : null}
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="FACULTY_PREFERENCE">Faculty Pref</SelectItem>
@@ -470,7 +551,14 @@ export default function ContributePage() {
                                     <Label htmlFor="urgency" className="font-semibold text-foreground text-sm">Urgency Level</Label>
                                     <Select required value={urgency} onValueChange={setUrgency}>
                                         <SelectTrigger className="w-full bg-background border-input h-11">
-                                            <SelectValue placeholder="Urgency" />
+                                            <SelectValue placeholder="Urgency">
+                                                {urgency ? (
+                                                    urgency === 'LOW' ? 'Low (FYI)' :
+                                                    urgency === 'MEDIUM' ? 'Medium' :
+                                                    urgency === 'CRITICAL' ? 'Critical' :
+                                                    urgency
+                                                ) : null}
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="LOW">Low (FYI)</SelectItem>

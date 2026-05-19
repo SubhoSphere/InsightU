@@ -162,6 +162,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         collegeId: user.collegeId,
+        avatarUrl: user.avatarUrl,
       },
     };
   }
@@ -230,6 +231,62 @@ export class AuthService {
     await prisma.verificationToken.delete({ where: { id: tokenRecord.id } });
 
     return { success: true, message: 'Password reset successfully.' };
+  }
+
+  /**
+   * Updates the user's name in the database.
+   */
+  public async updateProfile(userId: string, name: string, avatarUrl?: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found.');
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        name,
+        avatarUrl: avatarUrl !== undefined ? avatarUrl : undefined,
+      },
+    });
+
+    return {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      collegeId: updatedUser.collegeId,
+      avatarUrl: updatedUser.avatarUrl,
+    };
+  }
+
+  /**
+   * Changes the user's password securely from Account Settings.
+   */
+  public async changePassword(userId: string, newPasswordRaw: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found.');
+
+    const newHashed = await bcrypt.hash(newPasswordRaw, 10);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newHashed },
+    });
+
+    return { success: true, message: 'Password changed successfully.' };
+  }
+
+  /**
+   * Deactivates (deletes) the user account from the database.
+   */
+  public async deactivateAccount(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found.');
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return { success: true, message: 'Account permanently deactivated.' };
   }
 }
 

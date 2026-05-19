@@ -7,8 +7,13 @@ class VerificationController {
    */
   public async handleVote(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      // Extract parameters from the request body
-      const { voterId, postId, voteType } = req.body;
+      const voterId = (req as any).user?.id;
+      const { postId, voteType } = req.body;
+
+      if (!voterId) {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
+        return;
+      }
 
       // Invoke VerificationService to process the vote and dynamically update reliability scores/flag metrics
       const result = await verificationService.processVote(voterId, postId, voteType);

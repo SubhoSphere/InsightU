@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
-import { logout } from '@/store/slices/authSlice';
+import { logout, updateUser } from '@/store/slices/authSlice';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -31,23 +31,29 @@ import {
     LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMutation } from '@tanstack/react-query';
 
 export default function AccountPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+    const { isAuthenticated, user, token } = useAppSelector((state) => state.auth);
+
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (mounted && !isAuthenticated) {
             router.push('/login');
         }
-    }, [isAuthenticated, router]);
+    }, [isAuthenticated, router, mounted]);
 
     // --- Personal Details State ---
     const [name, setName] = useState(user?.name || '');
-    const [phone, setPhone] = useState('');
-    const [bio, setBio] = useState('');
-    const [college, setCollege] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
     // --- Settings State ---
     const [emailNotifications, setEmailNotifications] = useState(true);
@@ -65,65 +71,178 @@ export default function AccountPage() {
     // --- Upload & Save State ---
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isSavingPassword, setIsSavingPassword] = useState(false);
 
     // --- Danger Zone State ---
     const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // --- Toast Notifications State & Helper ---
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+    };
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => {
+                setToast(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
+    // --- TanStack Query Mutations ---
+    const updateProfileMutation = useMutation({
+        mutationFn: async (payload: { name: string; avatarUrl?: string }) => {
+            const res = await fetch('http://localhost:5000/api/auth/update-profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to update profile.');
+            }
+            return data.data;
+        },
+        onSuccess: (data: any) => {
+            dispatch(updateUser({ name: data.name, avatarUrl: data.avatarUrl }));
+            showToast('Profile updated successfully!', 'success');
+        },
+        onError: (error: any) => {
+            showToast(error.message || 'Failed to update profile.', 'error');
+        },
+    });
+
+    const changePasswordMutation = useMutation({
+        mutationFn: async (newPasswordRaw: string) => {
+            const res = await fetch('http://localhost:5000/api/auth/change-password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ newPassword: newPasswordRaw }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to update password.');
+            }
+            return data;
+        },
+        onSuccess: () => {
+            showToast('Password changed successfully!', 'success');
+            setShowPasswordSection(false);
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        },
+        onError: (error: any) => {
+            showToast(error.message || 'Failed to update password.', 'error');
+        },
+    });
+
+    const deactivateMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('http://localhost:5000/api/auth/deactivate', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to deactivate account.');
+            }
+            return data;
+        },
+        onSuccess: () => {
+            dispatch(logout());
+            showToast('Account deactivated successfully.', 'success');
+            router.push('/');
+        },
+        onError: (error: any) => {
+            showToast(error.message || 'Failed to deactivate account.', 'error');
+        },
+    });
+
+    // Derive loading states directly from TanStack Query mutations
+    const isSaving = updateProfileMutation.isPending;
+    const isSavingPassword = changePasswordMutation.isPending;
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 2 * 1024 * 1024) {
-                alert('File size must be under 2MB.');
+                showToast('File size must be under 2MB.', 'error');
                 return;
             }
-            const reader = new FileReader();
-            reader.onloadend = () => setAvatarPreview(reader.result as string);
-            reader.readAsDataURL(file);
+            setUploadingAvatar(true);
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('http://localhost:5000/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: formData,
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to upload avatar.');
+                }
+                setAvatarUrl(result.data.fileUrl);
+                setAvatarPreview(result.data.fileUrl);
+                showToast('Profile photo uploaded to Cloudinary!', 'success');
+            } catch (error: any) {
+                console.error("Avatar upload failed:", error);
+                showToast(error.message || 'Avatar upload failed.', 'error');
+            } finally {
+                setUploadingAvatar(false);
+            }
         }
     };
 
     const handleSaveProfile = async () => {
-        setIsSaving(true);
-        await new Promise((r) => setTimeout(r, 1200));
-        setIsSaving(false);
+        if (!name.trim()) {
+            showToast('Full name is required.', 'error');
+            return;
+        }
+        updateProfileMutation.mutate({ name, avatarUrl });
     };
 
     const handleChangePassword = async () => {
         if (newPassword !== confirmPassword) {
-            alert('New passwords do not match.');
+            showToast('New passwords do not match.', 'error');
             return;
         }
         if (newPassword.length < 8) {
-            alert('Password must be at least 8 characters.');
+            showToast('Password must be at least 8 characters.', 'error');
             return;
         }
-        setIsSavingPassword(true);
-        await new Promise((r) => setTimeout(r, 1200));
-        setIsSavingPassword(false);
-        setShowPasswordSection(false);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        changePasswordMutation.mutate(newPassword);
     };
 
     const handleLogout = () => {
         dispatch(logout());
+        showToast('Signed out successfully.', 'success');
         router.push('/login');
     };
 
     const handleDeactivate = async () => {
-        await new Promise((r) => setTimeout(r, 800));
-        dispatch(logout());
-        router.push('/');
+        deactivateMutation.mutate();
     };
 
     const initials = user?.name
         ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase()
         : 'U';
 
-    if (!isAuthenticated) return null;
+    if (!mounted || !isAuthenticated) return null;
 
     return (
         <div className="flex-1 space-y-8 p-4 md:p-8 pt-6 w-full max-w-5xl mx-auto pb-16">
@@ -141,11 +260,18 @@ export default function AccountPage() {
                     {/* Avatar Card */}
                     <div className="bg-card/40 backdrop-blur-md border border-border rounded-xl p-6 shadow-sm flex flex-col items-center justify-center">
                         <div className="relative group mb-4">
-                            <div className="w-28 h-28 rounded-full bg-primary/10 border-4 border-primary/20 flex items-center justify-center overflow-hidden shadow-lg">
+                            <div className="w-28 h-28 rounded-full bg-primary/10 border-4 border-primary/20 flex items-center justify-center overflow-hidden shadow-lg relative">
                                 {avatarPreview ? (
                                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : user?.avatarUrl ? (
+                                    <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
                                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.name || 'User')}`} alt="Avatar" className="w-full h-full object-cover" />
+                                )}
+                                {uploadingAvatar && (
+                                    <div className="absolute inset-0 bg-background/70 backdrop-blur-sm flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                                    </div>
                                 )}
                             </div>
                             <button
@@ -188,33 +314,12 @@ export default function AccountPage() {
                             <p className="text-[11px] text-muted-foreground pl-1">Email is linked to your authentication provider and cannot be changed.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    <Phone className="w-4 h-4 text-muted-foreground" /> Phone Number
-                                </Label>
-                                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" className="bg-background/50 border-input h-11" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="college" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-muted-foreground" /> College / Institution
-                                </Label>
-                                <Input id="college" value={college} onChange={(e) => setCollege(e.target.value)} placeholder="e.g., MIT, Stanford" className="bg-background/50 border-input h-11" />
-                            </div>
-                        </div>
-
                         <div className="space-y-2">
-                            <Label htmlFor="bio" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                <Star className="w-4 h-4 text-muted-foreground" /> Bio
+                            <Label htmlFor="collegeId" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-muted-foreground" /> College Sector ID
                             </Label>
-                            <textarea
-                                id="bio"
-                                value={bio}
-                                onChange={(e) => setBio(e.target.value)}
-                                placeholder="Tell others a bit about yourself..."
-                                rows={3}
-                                className="flex w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
-                            />
+                            <Input id="collegeId" value={user?.collegeId || ''} disabled className="bg-muted/30 border-input h-11 cursor-not-allowed opacity-70" />
+                            <p className="text-[11px] text-muted-foreground pl-1">College sector alignment is verified during onboarding and is immutable.</p>
                         </div>
 
                         <div className="flex justify-end pt-2">
@@ -411,6 +516,23 @@ export default function AccountPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Custom Premium Toast Notification */}
+            {toast && (
+                <div className={cn(
+                    "fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border animate-in fade-in slide-in-from-bottom-5 duration-300",
+                    toast.type === 'success' 
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 backdrop-blur-md" 
+                        : "bg-destructive/10 border-destructive/30 text-destructive backdrop-blur-md"
+                )}>
+                    {toast.type === 'success' ? (
+                        <ShieldCheck className="w-5 h-5 shrink-0" />
+                    ) : (
+                        <AlertTriangle className="w-5 h-5 shrink-0" />
+                    )}
+                    <span className="text-sm font-semibold text-foreground">{toast.message}</span>
+                </div>
+            )}
 
         </div>
     );

@@ -135,53 +135,19 @@ const Navbar = () => {
                             <TechLink key={item.path} item={item} isActive={pathname === item.path} />
                         ))}
                     </nav>
-                    <ThemeToggle />
 
                     {/* --- RIGHT SIDE --- */}
                     <div className='flex items-center gap-4'>
-
+                        <ThemeToggle />
                         {
                             !mounted ? null : isAuthenticated && user ? (
                                 <div className="hidden md:block">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger className="relative h-9 w-9 rounded-full border border-border p-0 hover:bg-muted/50 focus-visible:ring-1 outline-none flex items-center justify-center cursor-pointer">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`} alt={user.name || 'User'} />
-                                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                    {user.name?.[0]?.toUpperCase() || 'U'}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border">
-                                            <DropdownMenuLabel className="font-normal px-2 py-1.5 flex flex-col gap-1">
-                                                <div className="flex flex-col space-y-1">
-                                                    <p className="text-sm font-semibold leading-none text-foreground">{user.name}</p>
-                                                    <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>
-                                                </div>
-                                                <div className="mt-1.5 px-2 py-0.5 text-[9px] font-mono font-semibold tracking-wider bg-primary/15 text-primary rounded-md uppercase self-start">
-                                                    {user.role.replace('_', ' ')}
-                                                </div>
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuSeparator className="my-1.5 bg-border" />
-                                            <DropdownMenuItem className="p-0">
-                                                <Link href="/dashboard" className="flex items-center w-full gap-2 px-3 py-2 text-sm cursor-pointer">
-                                                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                                                    <span>Dashboard</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem className="p-0">
-                                                <Link href="/dashboard/account" className="flex items-center w-full gap-2 px-3 py-2 text-sm cursor-pointer">
-                                                    <Settings className="h-4 w-4 text-muted-foreground" />
-                                                    <span>Account Settings</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator className="my-1.5 bg-border" />
-                                            <DropdownMenuItem disabled={pending} onClick={handleLogout} variant="destructive" className="cursor-pointer flex items-center w-full gap-2 px-2 py-1.5 text-sm text-destructive focus:bg-destructive/10 focus:text-destructive">
-                                                <LogOut className="h-4 w-4" />
-                                                <span>Logout</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`} alt={user.name || 'User'} />
+                                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                            {user.name?.[0]?.toUpperCase() || 'U'}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 </div>
                             ) : (
                                 <Link href='/login' className="hidden md:flex p-2 px-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full tracking-widest text-xs transition-all font-semibold uppercase">Sign In</Link>
@@ -200,7 +166,7 @@ const Navbar = () => {
                                             !mounted ? null : isAuthenticated && user && (
                                                 <div className='mb-4 p-2 flex gap-4 items-center border-b border-border pb-4'>
                                                     <Avatar className="h-10 w-10">
-                                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`} alt={user.name || 'User'} />
+                                                        <AvatarImage src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`} alt={user.name || 'User'} />
                                                         <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                                                             {user.name?.[0]?.toUpperCase() || 'U'}
                                                         </AvatarFallback>

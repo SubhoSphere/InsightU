@@ -5,21 +5,18 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-[#F3F4F6] dark:bg-zinc-950 relative z-10">
+    <footer className="border-t border-border relative z-10">
       {/* Subtle Grid Matrix Accent Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 py-16 sm:py-20 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 sm:gap-16">
-          
+
           {/* Brand Block */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-primary-foreground font-black text-xl">IU</span>
-              </div>
-              <span className="text-foreground font-extrabold text-2xl tracking-tight uppercase">InsightU</span>
-            </div>
+            <Link href="/" className="flex items-center">
+              <img src="/l_logo.png" alt="InsightU Logo" className="h-10 w-auto object-contain" />
+            </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm font-medium">
               A sovereign, peer-verified academic intelligence network. We inspire college students to collaborate, exchange facts, and navigate placement tracks with absolute clarity.
             </p>
@@ -95,12 +92,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                <Link href="/legal/privacy" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                   Privacy Schema
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                <Link href="/legal/terms" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                   Algorithm Terms
                 </Link>
               </li>

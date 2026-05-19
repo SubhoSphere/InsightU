@@ -78,7 +78,7 @@ export class IntelService {
    * @param filters The dynamic query parameters.
    * @returns An array of filtered IntelPosts.
    */
-  public async getFilteredPosts(filters: PostFilterInput): Promise<IntelPost[]> {
+  public async getFilteredPosts(filters: PostFilterInput): Promise<any[]> {
     const whereClause: Prisma.IntelPostWhereInput = {
       status: Status.ACTIVE,
     };
@@ -108,9 +108,98 @@ export class IntelService {
 
     return await prisma.intelPost.findMany({
       where: whereClause,
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            reliabilityScore: true,
+          },
+        },
+        votes: {
+          select: {
+            voterId: true,
+            voteType: true,
+            voter: {
+              select: {
+                role: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
+    });
+  }
+
+  /**
+   * Retrieves all posts authored by a specific user.
+   */
+  public async getUserPosts(authorId: string): Promise<any[]> {
+    return await prisma.intelPost.findMany({
+      where: { authorId },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            reliabilityScore: true,
+          },
+        },
+        votes: {
+          select: {
+            voterId: true,
+            voteType: true,
+            voter: {
+              select: {
+                role: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Updates an existing intelligence post.
+   */
+  public async updatePost(postId: string, authorId: string, data: { title?: string; description?: string; category?: Category; branchTag?: string; urgency?: Urgency; file?: FileAttachmentInput }): Promise<IntelPost> {
+    const post = await prisma.intelPost.findUnique({ where: { id: postId } });
+    if (!post) throw new Error('Post not found.');
+    if (post.authorId !== authorId) throw new Error('Unauthorized to update this post.');
+
+    return await prisma.intelPost.update({
+      where: { id: postId },
+      data: {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        branchTag: data.branchTag,
+        urgency: data.urgency,
+        file: data.file ? {
+          fileKey: data.file.fileKey,
+          fileUrl: data.file.fileUrl,
+        } : undefined,
+      },
+    });
+  }
+
+  /**
+   * Deletes an existing intelligence post.
+   */
+  public async deletePost(postId: string, authorId: string): Promise<IntelPost> {
+    const post = await prisma.intelPost.findUnique({ where: { id: postId } });
+    if (!post) throw new Error('Post not found.');
+    if (post.authorId !== authorId) throw new Error('Unauthorized to delete this post.');
+
+    return await prisma.intelPost.delete({
+      where: { id: postId },
     });
   }
 }

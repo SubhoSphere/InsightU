@@ -92,6 +92,7 @@ model User {
   role             Role      @default(FRESHER)
   collegeId        String
   reliabilityScore Int       @default(0)
+  avatarUrl        String?
   createdAt        DateTime  @default(now())
 
   accounts         Account[]
@@ -131,4 +132,15 @@ model VerificationVote {
   voter     User      @relation(fields: [voterId], references: [id], onDelete: Cascade)
 
   @@unique([postId, voterId])
+}
+
+model SupportTicket {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  category    String
+  phone       String?
+  description String
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
 }

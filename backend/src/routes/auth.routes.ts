@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authController from '../controllers/auth.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -10,5 +11,10 @@ router.post('/resend-otp', authController.handleResendOTP.bind(authController));
 router.post('/login', authController.handleLogin.bind(authController));
 router.post('/forgot-password', authController.handleForgotPassword.bind(authController));
 router.post('/reset-password', authController.handleResetPassword.bind(authController));
+
+// Authenticated Account Endpoints
+router.put('/update-profile', authMiddleware, authController.handleUpdateProfile.bind(authController));
+router.put('/change-password', authMiddleware, authController.handleChangePassword.bind(authController));
+router.delete('/deactivate', authMiddleware, authController.handleDeactivateAccount.bind(authController));
 
 export default router;

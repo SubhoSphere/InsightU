@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 // --- Mock Data for Charts ---
 const pulseData = [
@@ -63,7 +64,7 @@ const recentActivity = [
 ];
 
 export default function DashboardOverviewPage() {
-    const { user } = useAppSelector((state) => state.auth);
+    const { user, token } = useAppSelector((state) => state.auth);
     const [mounted, setMounted] = useState(false);
 
     // Prevent hydration errors with recharts
@@ -71,8 +72,39 @@ export default function DashboardOverviewPage() {
         setMounted(true);
     }, []);
 
-    // Get the first name or fallback
-    const firstName = user?.name ? user.name.split(' ')[0] : 'Operator';
+    // Fetch live statistics with React Query
+    const { data: statsData, isLoading: isLoadingStats } = useQuery({
+        queryKey: ['dashboard-overview-stats', token],
+        queryFn: async () => {
+            if (!token) return null;
+            const res = await fetch('http://localhost:5000/api/stats/overview', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Failed to fetch overview stats.');
+            return json.data;
+        },
+        enabled: !!token,
+    });
+
+    // Map dynamic and resilient metrics
+    const liveTotalIntel = statsData?.metrics?.totalIntel ?? 0;
+    const liveActiveSeniors = statsData?.metrics?.activeSeniors ?? 0;
+    const liveReliabilityScore = statsData?.metrics?.reliabilityScore ?? user?.reliabilityScore ?? 0;
+    const livePendingReviews = statsData?.metrics?.pendingReviews ?? 0;
+
+    const livePulseData = statsData?.pulseData && statsData.pulseData.length > 0 ? statsData.pulseData : pulseData;
+    
+    // Check if categoryData is empty or not yet initialized
+    const isCategoryEmpty = !statsData?.categoryData || statsData.categoryData.reduce((sum: number, item: any) => sum + item.value, 0) === 0;
+    const liveCategoryData = isCategoryEmpty ? categoryData : statsData.categoryData;
+
+    const liveRecentActivity = statsData?.recentActivity && statsData.recentActivity.length > 0 ? statsData.recentActivity : recentActivity;
+
+    // Get the first name or fallback, guarded by mount state to prevent hydration errors
+    const firstName = mounted && user?.name ? user.name.split(' ')[0] : 'Operator';
 
     return (
         <div className="flex-1 space-y-8 p-4 md:p-8 pt-6 w-full max-w-7xl mx-auto">
@@ -96,10 +128,12 @@ export default function DashboardOverviewPage() {
                         <Activity className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex flex-col mt-2">
-                        <span className="text-4xl font-extrabold text-foreground tracking-tight">1,248</span>
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">
+                            {liveTotalIntel.toLocaleString()}
+                        </span>
                         <p className="text-xs text-emerald-500 font-bold flex items-center mt-1">
                             <TrendingUp className="h-3 w-3 mr-1" />
-                            +12% from last month
+                            Live curriculum grid
                         </p>
                     </div>
                 </div>
@@ -111,10 +145,12 @@ export default function DashboardOverviewPage() {
                         <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex flex-col mt-2">
-                        <span className="text-4xl font-extrabold text-foreground tracking-tight">342</span>
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">
+                            {liveActiveSeniors}
+                        </span>
                         <p className="text-xs text-emerald-500 font-bold flex items-center mt-1">
                             <TrendingUp className="h-3 w-3 mr-1" />
-                            +4 new this week
+                            Upperclassmen & guides
                         </p>
                     </div>
                 </div>
@@ -127,9 +163,12 @@ export default function DashboardOverviewPage() {
                         <ShieldCheck className="h-4 w-4 text-emerald-500" />
                     </div>
                     <div className="flex flex-col mt-2 relative z-10">
-                        <span className="text-4xl font-extrabold text-foreground tracking-tight">94<span className="text-xl text-muted-foreground">/100</span></span>
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">
+                            {liveReliabilityScore}
+                            <span className="text-sm font-semibold text-muted-foreground ml-1">pts</span>
+                        </span>
                         <p className="text-xs text-emerald-500 font-bold flex items-center mt-1">
-                            Elite Verification Tier
+                            {liveReliabilityScore >= 80 ? 'Elite Verification Tier' : 'Standard Peer Tier'}
                         </p>
                     </div>
                 </div>
@@ -141,9 +180,10 @@ export default function DashboardOverviewPage() {
                         <AlertCircle className="h-4 w-4 text-amber-500" />
                     </div>
                     <div className="flex flex-col mt-2">
-                        <span className="text-4xl font-extrabold text-foreground tracking-tight">14</span>
+                        <span className="text-4xl font-extrabold text-foreground tracking-tight">
+                            {livePendingReviews}
+                        </span>
                         <p className="text-xs text-amber-500 font-bold flex items-center mt-1">
-                            <TrendingDown className="h-3 w-3 mr-1" />
                             Needs peer moderation
                         </p>
                     </div>
@@ -163,7 +203,7 @@ export default function DashboardOverviewPage() {
                     <div className="h-[280px] w-full">
                         {mounted && (
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={pulseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <AreaChart data={livePulseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35}/>
@@ -212,7 +252,7 @@ export default function DashboardOverviewPage() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={categoryData}
+                                        data={liveCategoryData}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={65}
@@ -221,7 +261,7 @@ export default function DashboardOverviewPage() {
                                         dataKey="value"
                                         stroke="none"
                                     >
-                                        {categoryData.map((entry, index) => (
+                                        {liveCategoryData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -240,7 +280,7 @@ export default function DashboardOverviewPage() {
                     </div>
                     {/* Custom Legend */}
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/50">
-                        {categoryData.map((item, index) => (
+                        {liveCategoryData.map((item, index) => (
                             <div key={item.name} className="flex items-center">
                                 <div className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                                 <span className="text-xs text-muted-foreground font-semibold">{item.name}</span>
@@ -250,74 +290,6 @@ export default function DashboardOverviewPage() {
                     </div>
                 </div>
 
-            </div>
-
-            {/* Data Table Bottom Row */}
-            <div className="bg-card/40 backdrop-blur-md border border-border rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-border/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                        <h3 className="text-lg font-semibold text-foreground">Recent Network Activity</h3>
-                        <p className="text-sm text-muted-foreground">Latest intelligence submitted to the grid.</p>
-                    </div>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-muted-foreground uppercase bg-muted/20 border-b border-border/50">
-                            <tr>
-                                <th scope="col" className="px-6 py-4 font-medium tracking-wider">Author Profile</th>
-                                <th scope="col" className="px-6 py-4 font-medium tracking-wider">Intelligence Target</th>
-                                <th scope="col" className="px-6 py-4 font-medium tracking-wider">Date</th>
-                                <th scope="col" className="px-6 py-4 font-medium tracking-wider text-right">Verification Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/50">
-                            {recentActivity.map((item) => (
-                                <tr key={item.id} className="hover:bg-muted/10 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                                                {item.author.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <div className="font-semibold text-foreground flex items-center gap-1">
-                                                    {item.author}
-                                                    {item.role === 'VERIFIED_SENIOR' && <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground truncate">{item.role.replace('_', ' ')}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="font-medium text-foreground">{item.title}</div>
-                                        <div className="text-xs text-muted-foreground mt-1 flex items-center">
-                                            <FileText className="w-3 h-3 mr-1" />
-                                            {item.category}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="flex items-center">
-                                            <Clock className="w-3.5 h-3.5 mr-1" />
-                                            {item.date}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Badge variant="outline" className={cn(
-                                            "border",
-                                            item.status === 'Verified' && "bg-green-500/10 text-green-500 border-green-500/20",
-                                            item.status === 'Pending' && "bg-orange-500/10 text-orange-500 border-orange-500/20",
-                                            item.status === 'Flagged' && "bg-destructive/10 text-destructive border-destructive/20"
-                                        )}>
-                                            {item.status === 'Verified' && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                                            {item.status === 'Pending' && <Clock className="w-3 h-3 mr-1" />}
-                                            {item.status === 'Flagged' && <AlertCircle className="w-3 h-3 mr-1" />}
-                                            {item.status}
-                                        </Badge>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
             </div>
 
         </div>
