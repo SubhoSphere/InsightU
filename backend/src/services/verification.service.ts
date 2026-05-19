@@ -19,7 +19,7 @@ export class VerificationService {
         // Query the 'User' collection to find the voter's identity and determine their 'role'
         const voter = await tx.user.findUnique({
           where: { id: voterId },
-          select: { role: true },
+          select: { role: true, reliabilityScore: true },
         });
 
         if (!voter) {
@@ -49,14 +49,19 @@ export class VerificationService {
         let action: 'create' | 'delete' | 'update' = 'create';
         let reliabilityChange = 0;
 
+        // Dynamic Trust Multiplier: scales vote impact based on voter's own reliability score
+        // Bounded between 0.1 (low-trust voter) and 3.0 (elite-trust voter) for mathematical stability
+        const dynamicMultiplier = Math.max(0.1, Math.min(3.0, 1 + (voter.reliabilityScore / 100)));
+        const baseWeight = voter.role === Role.VERIFIED_SENIOR ? 2.0 : 1.0;
+
         if (existingVote) {
           if (existingVote.voteType === voteType) {
             // Undo vote (Delete)
             action = 'delete';
             if (existingVote.voteType === 'VALID') {
-              reliabilityChange = voter.role === Role.VERIFIED_SENIOR ? -10 : -5;
+              reliabilityChange = Math.round(-5 * baseWeight * dynamicMultiplier);
             } else {
-              reliabilityChange = voter.role === Role.VERIFIED_SENIOR ? 20 : 10;
+              reliabilityChange = Math.round(10 * baseWeight * dynamicMultiplier);
             }
             await tx.verificationVote.delete({
               where: {
@@ -70,9 +75,9 @@ export class VerificationService {
             // Swap vote (Update)
             action = 'update';
             if (existingVote.voteType === 'VALID' && voteType === 'INVALID') {
-              reliabilityChange = voter.role === Role.VERIFIED_SENIOR ? -30 : -15;
+              reliabilityChange = Math.round(-15 * baseWeight * dynamicMultiplier);
             } else {
-              reliabilityChange = voter.role === Role.VERIFIED_SENIOR ? 30 : 15;
+              reliabilityChange = Math.round(15 * baseWeight * dynamicMultiplier);
             }
             await tx.verificationVote.update({
               where: {
@@ -90,9 +95,9 @@ export class VerificationService {
           // First time vote (Create)
           action = 'create';
           if (voteType === 'VALID') {
-            reliabilityChange = voter.role === Role.VERIFIED_SENIOR ? 10 : 5;
+            reliabilityChange = Math.round(5 * baseWeight * dynamicMultiplier);
           } else {
-            reliabilityChange = voter.role === Role.VERIFIED_SENIOR ? -20 : -10;
+            reliabilityChange = Math.round(-10 * baseWeight * dynamicMultiplier);
           }
           await tx.verificationVote.create({
             data: {
@@ -118,17 +123,19 @@ export class VerificationService {
           where: { postId },
           include: {
             voter: {
-              select: { role: true },
+              select: { role: true, reliabilityScore: true },
             },
           },
         });
 
         let postNetScore = 0;
         for (const v of allVotes) {
+          const vBase = v.voter.role === Role.VERIFIED_SENIOR ? 2.0 : 1.0;
+          const vMultiplier = Math.max(0.1, Math.min(3.0, 1 + (v.voter.reliabilityScore / 100)));
           if (v.voteType === 'VALID') {
-            postNetScore += v.voter.role === Role.VERIFIED_SENIOR ? 10 : 5;
+            postNetScore += Math.round(5 * vBase * vMultiplier);
           } else {
-            postNetScore += v.voter.role === Role.VERIFIED_SENIOR ? -20 : -10;
+            postNetScore += Math.round(-10 * vBase * vMultiplier);
           }
         }
 

@@ -119,6 +119,7 @@ model IntelPost {
 
   @@index([collegeId, branchTag])
   @@index([urgency])
+  @@index([collegeId, branchTag, category, urgency])
 }
 
 model VerificationVote {
