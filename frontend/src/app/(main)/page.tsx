@@ -160,22 +160,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Absolute Bottom Center Portrait */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[240px] sm:w-[300px] md:w-[400px] h-[32vh] md:h-[42vh] z-10 pointer-events-none">
-          {/* Radial Overlay matching background behind the head */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-48 h-48 bg-background border border-border rounded-full -z-10 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.02)_0%,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
 
-          <Image
-            src="/hero_student3.png"
-            alt="Student Portrait"
-            width={400}
-            height={530}
-            className="w-full h-full object-contain filter grayscale select-none"
-            priority
-          />
-          {/* Fade bottom to blend into base */}
-          <div className="absolute bottom-0 left-0 w-full h-[35%] bg-gradient-to-t from-background via-background/95 to-transparent z-20" />
-        </div>
 
         {/* LEFT SIDE CONTENT - Desktop only */}
         <div className="absolute left-8 lg:left-16 xl:left-24 top-1/4 bottom-12 w-72 hidden md:flex flex-col justify-between pointer-events-none z-20">
